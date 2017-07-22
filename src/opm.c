@@ -141,16 +141,21 @@ void opm_ground(int p, float dt)
         if (vga_frame % 64 == 0)
             message("vx is %f\n", players[p].vx);
         if (players[p].vx > 10.0)
+        {
             next_frame = ANIM_RUN_R_0 + next_frame%4;
+        }
         else
+        {
+            frame_rate *= players[p].vx/3.0;
             next_frame = ANIM_WALK_R_0 + next_frame%4;
+        }
         slow_down_time = 0;
     }
     else if (GAMEPAD_PRESSED(p, left))
     {
         players[p].vx -= 1 + 0.05*players[p].run_charge;
         slow_down_time = 0;
-        next_frame = ANIM_WALK_R_0 + next_frame%4;
+        next_frame = ANIM_WALK_R_0 + (next_frame+2)%4;
     }
     else
     {

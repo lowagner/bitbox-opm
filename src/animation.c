@@ -35,7 +35,6 @@ void animation_interrupt(int p, int next_frame)
     players[p].animation.frames[a_mix] = -1; // needed to be confessed.
     
     _animation_copy_to(p, a_to, next_frame);
-    
 }
 
 void animation_complete_and_push(int p, int next_frame)

@@ -69,14 +69,21 @@ void individual_player_frame(int p, float dt)
         players[p].y = SCREEN_H - STREET_LEVEL_Y - 1;
         players[p].vy = 0;
     }
-    
+   
+    int previously_in_air = players[p].z < 0;
     players[p].vz += gravity * dt;
     players[p].z += players[p].vz * dt;
     if (players[p].z >= 0 && players[p].vz >= 0)
     {
         players[p].z = 0;
         players[p].vz = 0;
-        switch_player_ground(p, dt);
+        if (previously_in_air)
+        {
+            animation_interrupt(p, ANIM_CROUCH_R);
+            animation_tween(p, dt, 0.4, ANIM_CROUCH_L);
+        }
+        else
+            switch_player_ground(p, dt);
     }
     else
         switch_player_air(p, dt);
