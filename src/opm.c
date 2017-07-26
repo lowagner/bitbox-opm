@@ -140,10 +140,13 @@ void opm_ground(int p, float dt)
         // check if stopping a punch??
         if (vga_frame % 64 == 0)
             message("vx is %f\n", players[p].vx);
-        if (players[p].vx > 10.0)
+        if (GAMEPAD_PRESSED(p, L))
         {
-            next_frame = ANIM_RUN_R_0 + next_frame%4;
+            if (players[p].animation.frames[(players[p].animation.mix_from_to>>2)&3] != ANIM_CROUCH_L)
+                next_frame = ANIM_CROUCH_L;
         }
+        else if (players[p].vx > 10.0)
+            next_frame = ANIM_RUN_R_0 + next_frame%4;
         else
         {
             frame_rate *= players[p].vx/3.0;
@@ -155,9 +158,15 @@ void opm_ground(int p, float dt)
     {
         players[p].vx -= 1 + 0.05*players[p].run_charge;
         slow_down_time = 0;
-        next_frame = ANIM_WALK_R_0 + (next_frame+2)%4;
+        if (GAMEPAD_PRESSED(p, L))
+        {
+            if (players[p].animation.frames[(players[p].animation.mix_from_to>>2)&3] != ANIM_CROUCH_L)
+                next_frame = ANIM_CROUCH_L;
+        }
+        else
+            next_frame = ANIM_WALK_R_0 + (next_frame+2)%4;
     }
-    else
+    else if (!(gamepad_buttons[p] & (gamepad_up | gamepad_down)))
     {
         if (next_frame/4 == ANIM_WALK_R_0/4)
             next_frame %= 2; 
@@ -168,7 +177,6 @@ void opm_ground(int p, float dt)
     {
         players[p].vy -= 1 + 0.03*players[p].run_charge;
         slow_down_time = 0;
-        // TODO: This isn't quite working yet:
         if (!(gamepad_buttons[p] & (gamepad_left | gamepad_right)))
         {
             if (players[p].vx > 10.0)
