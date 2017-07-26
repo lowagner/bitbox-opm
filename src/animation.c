@@ -54,10 +54,12 @@ void animation_complete_and_push(int p, int next_frame)
     _animation_copy_to(p, a_to, next_frame);
 }
 
-void animation_tween(int p, const float delta, const float rate, int maybe_next_frame)
+void animation_tween(int p, float delta, float rate, int maybe_next_frame)
 {
     int a_mix = players[p].animation.mix_from_to;
     int a_from, a_to;
+    if (rate < 0)
+        rate *= -1;
     players[p].animation.tween += delta*rate;
     if  (players[p].animation.tween < 1.0f)
     {
