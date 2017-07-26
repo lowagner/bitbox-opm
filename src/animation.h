@@ -1,6 +1,9 @@
 #pragma once
 #include <stdint.h>
 
+#define ANIM_FROM(p) players[p].animation.frames[(players[p].animation.mix_from_to>>2)&3]
+#define ANIM_TO(p) players[p].animation.frames[players[p].animation.mix_from_to>>4]
+
 /*
     animation consists of frames of the player's core and limbs;
     these frames are tweened for the final result.

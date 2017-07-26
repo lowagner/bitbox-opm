@@ -43,9 +43,9 @@ static const uint8_t opm_next_frames[ANIM_COUNT] = {
     [ANIM_FLY_0]=ANIM_FLY_1,
     [ANIM_FLY_1]=ANIM_FLY_0,
     [ANIM_PUNCH_R_0]=ANIM_PUNCH_R_1,
-    [ANIM_PUNCH_R_1]=ANIM_IDLE_0,
+    [ANIM_PUNCH_R_1]=ANIM_WALK_R_0,
     [ANIM_PUNCH_L_0]=ANIM_PUNCH_L_1,
-    [ANIM_PUNCH_L_1]=ANIM_IDLE_1,
+    [ANIM_PUNCH_L_1]=ANIM_WALK_L_0,
     [ANIM_KICK_R_0]=ANIM_KICK_R_1,
     [ANIM_KICK_R_1]=ANIM_IDLE_0,
     [ANIM_KICK_L_0]=ANIM_KICK_L_1,
@@ -78,9 +78,9 @@ static const float opm_frame_rates[ANIM_COUNT] = {
     [ANIM_FLY_0]=0.2,
     [ANIM_FLY_1]=0.2,
     [ANIM_PUNCH_R_0]=100.0,
-    [ANIM_PUNCH_R_1]=100.0,
+    [ANIM_PUNCH_R_1]=0.25,
     [ANIM_PUNCH_L_0]=100.0,
-    [ANIM_PUNCH_L_1]=100.0,
+    [ANIM_PUNCH_L_1]=0.25,
     [ANIM_KICK_R_0]=100.0,
     [ANIM_KICK_R_1]=100.0,
     [ANIM_KICK_L_0]=100.0,
@@ -97,9 +97,12 @@ static const float opm_frame_rates[ANIM_COUNT] = {
 
 void opm_ground(int p, float dt)
 {
-    int to_frame = players[p].animation.frames[players[p].animation.mix_from_to>>4];
+    int from_frame = ANIM_FROM(p);
+    int to_frame = ANIM_TO(p);
     int next_frame = opm_next_frames[to_frame];
-    float frame_rate = opm_frame_rates[to_frame];
+    static float frame_rate = 0.25;
+    if (to_frame/4 != ANIM_PUNCH_R_0/4 || to_frame % 2 == 0)
+        frame_rate = opm_frame_rates[to_frame];
 
     int slow_down_time = opm_run_charge(p, dt);
     if (vga_frame % 64 == 0)
@@ -128,13 +131,43 @@ void opm_ground(int p, float dt)
         animation_interrupt(p, ANIM_FLY_0);
         frame_rate = opm_frame_rates[ANIM_FLY_0];
         next_frame = ANIM_FLY_1;
+        // the above line does nothing if we return...
         return;
     }
     
     players[p].vx -= 0.5 * players[p].vx * dt;
     players[p].vy -= 0.5 * players[p].vy * dt;
-
-    if (GAMEPAD_PRESSED(p, right))
+    
+    if (GAMEPAD_PRESSED(p, B))
+    {
+        if (players[p].punch_charge == 0)
+        {
+            players[p].punch_charge += 0.5 + dt;
+            message("to frame %d/from frame %d\n", to_frame, from_frame);
+            animation_interrupt(p, ANIM_PUNCH_R_0 + 2 - ((from_frame%4)/2)*2);
+            return;
+        }
+        else
+        {
+            players[p].punch_charge += 0.5 + dt;
+            if (players[p].punch_charge > 256)
+            {
+                players[p].punch_charge = 256;
+                goto punch_now;
+            }
+            next_frame = to_frame;
+        }
+    }
+    else if (players[p].punch_charge)
+    {
+        punch_now:
+        next_frame = ((next_frame%4)/2)*2;
+        animation_interrupt(p, ANIM_PUNCH_R_1 + next_frame);
+        frame_rate = 8*players[p].punch_charge/dt;
+        players[p].punch_charge = 0;
+        next_frame = ANIM_PUNCH_R_0 + next_frame;
+    }
+    else if (GAMEPAD_PRESSED(p, right))
     {
         players[p].vx += 1 + 0.05*players[p].run_charge;
         // check if stopping a punch??
@@ -160,7 +193,7 @@ void opm_ground(int p, float dt)
         slow_down_time = 0;
         if (GAMEPAD_PRESSED(p, L))
         {
-            if (players[p].animation.frames[(players[p].animation.mix_from_to>>2)&3] != ANIM_CROUCH_L)
+            if (from_frame != ANIM_CROUCH_L)
                 next_frame = ANIM_CROUCH_L;
         }
         else
@@ -211,9 +244,9 @@ void opm_air(int p, float dt)
     if (opm_run_charge(p, dt) && !GAMEPAD_PRESSED(p, dpad))
         physics_slow_time(players[p].run_charge);
 
-    int next_frame = players[p].animation.frames[players[p].animation.mix_from_to>>4];
-    if (next_frame/2 == ANIM_FLY_0/2)
-        animation_tween(p, dt, 0.1, ANIM_FLY_0 | (1-(next_frame&1)));
+    int to_frame = ANIM_TO(p);
+    if (to_frame/2 == ANIM_FLY_0/2)
+        animation_tween(p, dt, 0.1, ANIM_FLY_0 | (1-(to_frame&1)));
     else
         animation_tween(p, dt, 0.1, ANIM_FLY_0);
 }
