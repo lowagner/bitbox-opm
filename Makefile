@@ -89,6 +89,7 @@ src/characters.c: Makefile $(CHARACTERS_C) src/characters.h $(FRAMES_C)
 	@echo "#include \"characters.h\"" >> $@
 	@echo "#include \"draw.h\"" >> $@
 	@echo "#include <math.h>" >> $@
+	@echo "#include <stdlib.h>" >> $@
 	@for c in $(CHARACTERS_C_WITHOUT_SRC); do echo "#include \"$$c\"" >> $@; done
 	@for c in $(FRAMES_C_WITHOUT_SRC); do echo "#include \"$$c\"" >> $@; done
 	@echo "void character_set(int p, int character)" >> $@

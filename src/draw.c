@@ -232,6 +232,7 @@ void draw_add_player(int p)
 
 void draw_add_projectile(int k_min, int k_max)
 {
+    message("adding projectile from %d to %d\n", k_min, k_max);
     int i;
     for (i=0; i<draw_count; ++i)
     {

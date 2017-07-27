@@ -168,7 +168,7 @@ with open("src/switch_animation.c", 'w') as f:
     f.write('\tuint8_t angle;\n')
     f.write('\tanimation_limb *limb;\n')
     for region in ['top', 'bottom']:
-        for side in ['L', 'R']: 
+        for side in ['R', 'L']: 
             if region == 'top':
                 if side == 'L':
                     f.write('\told_pos.x = players[p].x + mix_core->chest.dx + mix_core->chest.width + 1;\n')

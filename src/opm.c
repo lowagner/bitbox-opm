@@ -6,6 +6,7 @@ void opm_start_level(int p)
 {
     players[p].vz = -10;
     players[p].vx = 3;
+    players[p].custom = 13;
 }
 
 static inline int opm_run_charge(int p, float dt)
@@ -152,7 +153,33 @@ void opm_ground(int p, float dt)
             if (dt != 1)
             {
                 if (from_frame/4 == ANIM_PUNCH_R_0/4)
-                    message("was punching before\n");
+                {
+                    message("consecutive normal punches from frame %d\n", from_frame);
+                    players[p].custom += 3;
+                    if (players[p].custom >= 16)
+                        players[p].custom = 1;
+                    int k = 32*p + 16 + players[p].custom;
+                    int dy = 5 + rand()%10;
+                    if (from_frame == ANIM_PUNCH_R_1)
+                    {
+                        memcpy(&quads[k], &quads[32*p+1 + 3], 3*sizeof(struct quad));
+                    }
+                    else
+                    {
+                        memcpy(&quads[k], &quads[32*p+1 + 3+3], 3*sizeof(struct quad));
+                        dy *= -1;
+                    }
+                    for (int dk=0; dk<3; ++dk)
+                    {
+                        quads[k+dk].x += 1.0;
+                        quads[k+dk].ix += 1;
+                        quads[k+dk].y += dy;
+                        quads[k+dk].iy += dy;
+                        quads[k+dk].lifetime = 20.0*dt;
+                        quads[k+dk].vx = players[p].vx; // TODO. make projectiles move on their own in draw
+                    }
+                    draw_add_projectile(k, k+2);
+                }
             }
             return;
         }
