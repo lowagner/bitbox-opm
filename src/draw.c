@@ -39,8 +39,42 @@ static inline void swap_draw_order_k_kminus1(int k)
     draw_order[k] = quad_kminus1;
 }
 
-void draw_frame()
+void draw_remove_old_projectiles(float dt)
 {
+    int i=-1;
+    while (1)
+    {
+        if (++i >= draw_count)
+            return;
+        struct quad *q = &quads[draw_order[i]];
+        if (!q->lifetime || (q->lifetime -= dt, q->lifetime > 0))
+            continue;
+        break;
+    }
+    int delta = 1;
+    while (1)
+    {
+        if (i + delta >= draw_count)
+            break;
+        struct quad *q = &quads[draw_order[i+delta]];
+        if (!q->lifetime || (q->lifetime -= dt, q->lifetime > 0))
+        {
+            // quad q is still in the running, bring it down
+            draw_order[i] = draw_order[i+delta];
+            q->draw_index = i++;
+        }
+        else
+            // quad q is not to be drawn anymore.
+            ++delta;
+    }
+    draw_count -= delta;
+}
+
+void draw_frame(float dt)
+{
+    if (dt)
+        draw_remove_old_projectiles(dt);
+    
     // insertion sort all the drawing quads on the map
     for (int j=0; j<draw_count-1; ++j)
     {
@@ -183,6 +217,7 @@ void draw_remove_player(int p)
         else
         {
             draw_order[i] = draw_order[i+delta];
+            quads[draw_order[i]].draw_index = i;
             ++i;
         }
     }
@@ -192,20 +227,29 @@ void draw_remove_player(int p)
 void draw_add_player(int p)
 {
     // player p must not already have been added.
+    draw_add_projectile(32*p+1, 32*p+15);
+}
 
+void draw_add_projectile(int k_min, int k_max)
+{
     int i;
     for (i=0; i<draw_count; ++i)
     {
-        if (quads[draw_order[i]].iy > quads[32*p+1].iy)
+        if (quads[draw_order[i]].iy > quads[k_min].iy)
             break;
     }
+    int delta = k_max - k_min + 1;
     for (int j=draw_count-1; j>=i; --j)
-        draw_order[j+15] = draw_order[j];
+    {
+        draw_order[j+delta] = draw_order[j];
+        quads[draw_order[j+delta]].draw_index = j + delta;
+    }
 
-    for (int j=1; j<16; ++j)
-        draw_order[i+j-1] = 32*p + j;
+    for (int j=0; j<delta; ++j)
+    {
+        draw_order[i+j] = k_min+j;
+        quads[k_min+j].draw_index = i+j;
+    }
 
-    // don't sort individual player bits, those will sort at draw_frame.
-
-    draw_count += 15;
+    draw_count += delta;
 }

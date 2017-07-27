@@ -57,10 +57,8 @@ void game_frame()
     if (overlay_visible())
         overlay_frame();
 
-    draw_frame();
-
     if (pause)
-        return;
+        return draw_frame(0);
 
     physics_frame();
 }

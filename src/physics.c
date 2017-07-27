@@ -1,5 +1,6 @@
 #include "physics.h"
 #include "player.h"
+#include "draw.h"
 #include "common.h"
 
 float gravity;
@@ -21,7 +22,10 @@ void physics_slow_time(int amount)
 
 void physics_frame()
 {
-    player_frame(1.0/physics_wait);
+    float dt = 1.0/physics_wait;
+    player_frame(dt);
+    draw_frame(dt);
+
     if (vga_frame % 32 == 0)
         message("delta %02d\n", physics_wait);
     if (physics_wait > 1)

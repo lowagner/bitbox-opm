@@ -69,10 +69,10 @@ static const float opm_frame_rates[ANIM_COUNT] = {
     [ANIM_WALK_R_1]=0.2,
     [ANIM_WALK_L_0]=0.2,
     [ANIM_WALK_L_1]=0.2,
-    [ANIM_RUN_R_0]=0.5,
-    [ANIM_RUN_R_1]=0.5,
-    [ANIM_RUN_L_0]=0.5,
-    [ANIM_RUN_L_1]=0.5,
+    [ANIM_RUN_R_0]=0.4,
+    [ANIM_RUN_R_1]=0.4,
+    [ANIM_RUN_L_0]=0.4,
+    [ANIM_RUN_L_1]=0.4,
     [ANIM_CROUCH_R]=0.1,
     [ANIM_CROUCH_L]=0.1,
     [ANIM_FLY_0]=0.2,
@@ -149,6 +149,11 @@ void opm_ground(int p, float dt)
         {
             players[p].punch_charge += 0.5 + dt;
             animation_interrupt(p, ANIM_PUNCH_R_0 + 2 - ((from_frame%4)/2)*2);
+            if (dt != 1)
+            {
+                if (from_frame/4 == ANIM_PUNCH_R_0/4)
+                    message("was punching before\n");
+            }
             return;
         }
         else
