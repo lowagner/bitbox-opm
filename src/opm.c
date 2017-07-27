@@ -61,8 +61,8 @@ static const uint8_t opm_next_frames[ANIM_COUNT] = {
 };
 
 static const float opm_frame_rates[ANIM_COUNT] = {
-    [ANIM_IDLE_0]=0.5,
-    [ANIM_IDLE_1]=0.5,
+    [ANIM_IDLE_0]=0.125,
+    [ANIM_IDLE_1]=0.125,
     [ANIM_GUARD_R]=0.5,
     [ANIM_GUARD_L]=0.5,
     [ANIM_WALK_R_0]=0.2,
@@ -78,9 +78,9 @@ static const float opm_frame_rates[ANIM_COUNT] = {
     [ANIM_FLY_0]=0.2,
     [ANIM_FLY_1]=0.2,
     [ANIM_PUNCH_R_0]=100.0,
-    [ANIM_PUNCH_R_1]=0.25,
+    [ANIM_PUNCH_R_1]=0.1,
     [ANIM_PUNCH_L_0]=100.0,
-    [ANIM_PUNCH_L_1]=0.25,
+    [ANIM_PUNCH_L_1]=0.1,
     [ANIM_KICK_R_0]=100.0,
     [ANIM_KICK_R_1]=100.0,
     [ANIM_KICK_L_0]=100.0,
@@ -103,6 +103,8 @@ void opm_ground(int p, float dt)
     static float frame_rate = 0.25;
     if (to_frame/4 != ANIM_PUNCH_R_0/4 || to_frame % 2 == 0)
         frame_rate = opm_frame_rates[to_frame];
+    //if (from_frame == ANIM_PUNCH_R_1 || from_frame == ANIM_PUNCH_L_1)
+    //    message("to frame %d/from punching frame %d; at rate %f\n", to_frame, from_frame, frame_rate);
 
     int slow_down_time = opm_run_charge(p, dt);
     if (vga_frame % 64 == 0)
@@ -146,7 +148,6 @@ void opm_ground(int p, float dt)
         if (players[p].punch_charge == 0)
         {
             players[p].punch_charge += 0.5 + dt;
-            message("to frame %d/from frame %d\n", to_frame, from_frame);
             animation_interrupt(p, ANIM_PUNCH_R_0 + 2 - ((from_frame%4)/2)*2);
             return;
         }
@@ -166,30 +167,36 @@ void opm_ground(int p, float dt)
         punch_now:
         next_frame = ((next_frame%4)/2)*2;
         animation_interrupt(p, ANIM_PUNCH_R_1 + next_frame);
-        frame_rate = 8*players[p].punch_charge/dt;
+        frame_rate = 8*players[p].punch_charge;
         players[p].punch_charge = 0;
         next_frame = ANIM_PUNCH_R_0 + next_frame;
     }
     else if (GAMEPAD_PRESSED(p, right))
     {
         players[p].vx += 1 + 0.05*players[p].run_charge;
-        // check if stopping a punch??
         if (vga_frame % 64 == 0)
             message("vx is %f\n", players[p].vx);
         if (GAMEPAD_PRESSED(p, L))
         {
             if (from_frame != ANIM_CROUCH_L)
                 next_frame = ANIM_CROUCH_L;
-            if (players[p].vx < 10.0)
-                frame_rate *= players[p].vx/2.0;
-            else
+            if (fabs(players[p].vx) < 10.0)
+                frame_rate *= fabs(players[p].vx)/2.0;
+            else if (dt == 1.0)
                 frame_rate *= 10.0/2.0;
         }
         else if (players[p].vx > 10.0)
-            next_frame = ANIM_RUN_R_0 + next_frame%4;
+        {
+            if (dt == 1.0)
+                next_frame = ANIM_RUN_R_0 + next_frame%4;
+            else
+                goto walk;
+        }
         else
         {
-            frame_rate *= players[p].vx/3.0;
+            if (dt == 1.0)
+                frame_rate *= players[p].vx/3.0;
+            walk:
             next_frame = ANIM_WALK_R_0 + next_frame%4;
         }
         slow_down_time = 0;
@@ -202,9 +209,9 @@ void opm_ground(int p, float dt)
         {
             if (from_frame != ANIM_CROUCH_L)
                 next_frame = ANIM_CROUCH_L;
-            if (players[p].vx > -10.0)
-                frame_rate *= -players[p].vx/2.0;
-            else
+            if (fabs(players[p].vx) < 10.0)
+                frame_rate *= fabs(players[p].vx)/2.0;
+            else if (dt == 1.0)
                 frame_rate *= 10.0/2.0;
         }
         else
@@ -222,6 +229,7 @@ void opm_ground(int p, float dt)
             if (players[p].vx < 10.0)
                 next_frame -= 4;
         }
+        goto after_movement;
     }
     if (GAMEPAD_PRESSED(p, up))
     {
@@ -231,14 +239,14 @@ void opm_ground(int p, float dt)
         {
             if (from_frame != ANIM_CROUCH_L)
                 next_frame = ANIM_CROUCH_L;
-            if (players[p].vy > -10.0)
-                frame_rate *= -players[p].vy/2.0;
-            else
+            if (fabs(players[p].vy) < 10.0)
+                frame_rate *= fabs(players[p].vy)/2.0;
+            else if (dt == 1.0)
                 frame_rate *= 10.0/2.0;
         }
         else if (!(gamepad_buttons[p] & (gamepad_left | gamepad_right)))
         {
-            if (players[p].vx > 10.0)
+            if (fabs(players[p].vx) > 10.0 && dt == 1.0)
                 next_frame = ANIM_RUN_R_0 + next_frame%4;
             else
                 next_frame = ANIM_WALK_R_0 + next_frame%4;
@@ -252,22 +260,28 @@ void opm_ground(int p, float dt)
         {
             if (from_frame != ANIM_CROUCH_L)
                 next_frame = ANIM_CROUCH_L;
-            if (players[p].vy < 10.0)
-                frame_rate *= players[p].vy/2.0;
-            else
+            if (fabs(players[p].vy) < 10.0)
+                frame_rate *= fabs(players[p].vy)/2.0;
+            else if (dt == 1.0)
                 frame_rate *= 10.0/2.0;
         }
         else if (!(gamepad_buttons[p] & (gamepad_left | gamepad_right)))
         {
-            if (players[p].vx > 10.0)
+            if (fabs(players[p].vx) > 10.0 && dt == 1.0)
                 next_frame = ANIM_RUN_R_0 + next_frame%4;
             else
                 next_frame = ANIM_WALK_R_0 + next_frame%4;
         }
     }
 
+    after_movement:
     if (slow_down_time)
         physics_slow_time(players[p].run_charge);
+
+    // here we see part of saitama's super power:
+    // regardless of bullet time he moves (relative to slower time) as if it was regular time.
+    frame_rate /= dt;
+    // the other part is invincibility.
     
     animation_tween(p, dt, frame_rate, next_frame);
 }
