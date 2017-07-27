@@ -6,7 +6,7 @@ void opm_start_level(int p)
 {
     players[p].vz = -10;
     players[p].vx = 3;
-    players[p].custom = 13;
+    players[p].custom = 1;
 }
 
 static inline int opm_run_charge(int p, float dt)
@@ -148,38 +148,41 @@ void opm_ground(int p, float dt)
     {
         if (players[p].punch_charge == 0)
         {
-            players[p].punch_charge += 0.5 + dt;
-            animation_interrupt(p, ANIM_PUNCH_R_0 + 2 - ((from_frame%4)/2)*2);
-            if (dt != 1)
+            if (dt != 1 && from_frame/4 == ANIM_PUNCH_R_0/4)
             {
-                if (from_frame/4 == ANIM_PUNCH_R_0/4)
+                to_frame = ANIM_PUNCH_R_1 + 2 - ((from_frame%4)/2)*2;
+                animation_interrupt(p, to_frame);
+                animation_tween(p, dt, 5.0/dt, to_frame & (~1));
+                message("consecutive normal punches to frame %d at %f\n", to_frame, 5.0/dt);
+                players[p].custom += 2;
+                if (players[p].custom >= 16 - 1)
+                    players[p].custom = 1;
+                int k = 32*p + 16 + players[p].custom;
+                int dy = 1 + 3*(rand()%6);
+                if (from_frame == ANIM_PUNCH_R_1)
+                    memcpy(&quads[k], &quads[32*p+1 + 3 + 3 + 1], 2*sizeof(struct quad));
+                else
                 {
-                    message("consecutive normal punches from frame %d\n", from_frame);
-                    players[p].custom += 3;
-                    if (players[p].custom >= 16)
-                        players[p].custom = 1;
-                    int k = 32*p + 16 + players[p].custom;
-                    int dy = 5 + rand()%10;
-                    if (from_frame == ANIM_PUNCH_R_1)
-                    {
-                        memcpy(&quads[k], &quads[32*p+1 + 3], 3*sizeof(struct quad));
-                    }
-                    else
-                    {
-                        memcpy(&quads[k], &quads[32*p+1 + 3+3], 3*sizeof(struct quad));
-                        dy *= -1;
-                    }
-                    for (int dk=0; dk<3; ++dk)
-                    {
-                        quads[k+dk].x += 1.0;
-                        quads[k+dk].ix += 1;
-                        quads[k+dk].y += dy;
-                        quads[k+dk].iy += dy;
-                        quads[k+dk].lifetime = 20.0*dt;
-                        quads[k+dk].vx = players[p].vx; // TODO. make projectiles move on their own in draw
-                    }
-                    draw_add_projectile(k, k+2);
+                    memcpy(&quads[k], &quads[32*p+1 + 3 + 1], 2*sizeof(struct quad));
+                    dy *= -1;
                 }
+                for (int dk=0; dk<2; ++dk)
+                {
+                    quads[k+dk].x += 1.0 - dy/2;
+                    quads[k+dk].ix += 1 - dy/2;
+                    quads[k+dk].y += dy;
+                    quads[k+dk].iy += dy;
+                    quads[k+dk].lifetime = 32.0*dt;
+                    quads[k+dk].vx = players[p].vx;
+                    quads[k+dk].vy = players[p].vy;
+                    quads[k+dk].vz = players[p].vz;
+                }
+                draw_add_projectile(k, k+1);
+            }
+            else
+            {
+                players[p].punch_charge += 0.5 + dt;
+                animation_interrupt(p, ANIM_PUNCH_R_0 + 2 - ((from_frame%4)/2)*2);
             }
             return;
         }

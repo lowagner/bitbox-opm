@@ -113,7 +113,7 @@ with open("src/switch_animation.c", 'w') as f:
         f.write('\t%0.11f,\n'%sin(2*pi*i/256)) 
     f.write('\t};\n\n')
 
-    f.write('static inline void _animation_reset(int p)\n{\n')
+    f.write('void _animation_reset(int p)\n{\n')
     f.write('\tfor (int k=1; k<16; ++k)\n\t{\n')
     f.write('\t\tquads[32*p+k].x = players[p].x;\n')
     f.write('\t\tquads[32*p+k].y = players[p].y;\n')
@@ -121,17 +121,17 @@ with open("src/switch_animation.c", 'w') as f:
     f.write('\t}\n')
     f.write('}\n\n')
 
-    f.write('static inline void _animation_copy_to(int p, int a_to, int next_frame)\n{\n')
+    f.write('void _animation_copy_to(int p, int a_to, int next_frame)\n{\n')
     f.write('\tif (players[p].animation.frames[a_to] == next_frame)\n\t\treturn;\n')
     f.write('\tplayers[p].animation.frames[a_to] = next_frame;\n')
-    f.write('\tconst struct animation_frame *frame = &players[p].all_frames[next_frame];')
+    f.write('\tconst struct animation_frame *frame = &players[p].all_frames[next_frame];\n')
     for p in core:
         f.write('\tplayers[p].animation.core[a_to].%s = frame->core.%s;\n'%(p,p))
     for p in limbs:
         f.write('\tplayers[p].animation.%s[a_to] = frame->%s;\n'%(p,p))
     f.write('}\n\n')
 
-    f.write('static inline void _animation_tween(int p, const float delta, const float rate, const int a_mix, const int a_from, const int a_to)\n{\n')
+    f.write('void _animation_tween(int p, const float delta, const float rate, const int a_mix, const int a_from, const int a_to)\n{\n')
     f.write('\tconst float tween_to = players[p].animation.tween;\n')
     f.write('\tconst float tween_from = 1.0f - tween_to;\n')
     f.write('\tanimation_core *to_core = &players[p].animation.core[a_to];\n');

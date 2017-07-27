@@ -54,6 +54,83 @@ void animation_complete_and_push(int p, int next_frame)
     _animation_copy_to(p, a_to, next_frame);
 }
 
+void animation_pop_and_push(int p, int from_frame, int to_frame)
+{
+    players[p].animation.tween = 0.0;
+
+    int a_mix, a_from, a_to;
+    if (players[p].animation.frames[0] == from_frame)
+    {
+        a_from = 0;
+        if (players[p].animation.frames[1] == to_frame)
+        {
+            a_to = 1;
+            a_mix = 2;
+        }
+        else
+        {
+            a_to = 2;
+            a_mix = 1;
+            _animation_copy_to(p, a_to, to_frame);
+        }
+    }
+    else if (players[p].animation.frames[1] == from_frame)
+    {
+        a_from = 1;
+        if (players[p].animation.frames[0] == to_frame)
+        {
+            a_to = 0;
+            a_mix = 2;
+        }
+        else
+        {
+            a_to = 2;
+            a_mix = 0;
+            _animation_copy_to(p, a_to, to_frame);
+        }
+    }
+    else if (players[p].animation.frames[2] == from_frame)
+    {
+        a_from = 2;
+        if (players[p].animation.frames[0] == to_frame)
+        {
+            a_to = 0;
+            a_mix = 1;
+        }
+        else
+        {
+            a_to = 1;
+            a_mix = 0;
+            _animation_copy_to(p, a_to, to_frame);
+        }
+    }
+    else
+    {
+        if (players[p].animation.frames[0] == to_frame)
+        {
+            a_to = 0;
+            a_from = 1;
+            a_mix = 2;
+        }
+        else if (players[p].animation.frames[1] == to_frame)
+        {
+            a_to = 1;
+            a_from = 0;
+            a_mix = 2;
+        }
+        else
+        {
+            a_to = 2;
+            a_from = 1;
+            a_mix = 0;
+            _animation_copy_to(p, a_to, to_frame);
+        }
+        _animation_copy_to(p, a_from, from_frame);
+    }
+
+    players[p].animation.mix_from_to = (a_mix) | (a_from << 2) | (a_to << 4);
+}
+
 void animation_tween(int p, float delta, float rate, int maybe_next_frame)
 {
     int a_mix = players[p].animation.mix_from_to;

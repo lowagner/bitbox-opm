@@ -30,5 +30,6 @@ animation_limb;
 
 void animation_reset(int p, int start_frame, int next_frame);
 void animation_interrupt(int p, int frame);
+void animation_pop_and_push(int p, int from_frame, int to_frame);
 void animation_complete_and_push(int p, int next_frame);
 void animation_tween(int p, float delta, float rate, int maybe_next_frame);
