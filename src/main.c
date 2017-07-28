@@ -76,7 +76,7 @@ void graph_line()
 {
     if (vga_odd)
         return;
-    if (vga_line >= SCREEN_H - OVERLAY_HEIGHT && overlay_visible())
+    if (vga_line < OVERLAY_HEIGHT && overlay_visible())
         return overlay_line();
     switch (level)
     {

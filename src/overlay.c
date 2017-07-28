@@ -66,15 +66,10 @@ void overlay_picture_line(int line)
 
 void overlay_line()
 {
-    if (vga_line < SCREEN_H-OVERLAY_HEIGHT+MARGIN_Y)
+    if (vga_line < MARGIN_Y)
     {
         // start the overlay, a white line then the background color:
-        if (vga_line == SCREEN_H-OVERLAY_HEIGHT)
-        {
-            memset(draw_buffer, 255, 2*SCREEN_W);
-            font_set_line_color(65535, overlay_mug[0][0]);
-        }
-        else if ((vga_line-1)/2 == (SCREEN_H-OVERLAY_HEIGHT)/2)
+        if (vga_line/2 == 0)
         {
             uint32_t *dst = (uint32_t *)draw_buffer;
             for (int i=0; i<SCREEN_W/2/4; ++i)
@@ -86,10 +81,10 @@ void overlay_line()
             }
         }
     }
-    else if (vga_line >= SCREEN_H-OVERLAY_HEIGHT+MARGIN_Y+PICTURE_SIZE)
+    else if (vga_line >= MARGIN_Y+PICTURE_SIZE)
     {
         // blank the line below the picture (to avoid scanline bleed):
-        if ((vga_line)/2 == (SCREEN_H-OVERLAY_HEIGHT+MARGIN_Y+PICTURE_SIZE)/2)
+        if ((vga_line)/2 == (MARGIN_Y+PICTURE_SIZE)/2)
         {
             uint32_t *dst = (uint32_t *)&draw_buffer[2*MARGIN_X];
             for (int i=0; i<(PICTURE_SIZE/2+1)/4; ++i)
@@ -100,10 +95,15 @@ void overlay_line()
                 *dst++ = font_pixel_doubles[0];
             }
         }
+        else if (vga_line == OVERLAY_HEIGHT-1)
+        {
+            memset(draw_buffer, 255, 2*SCREEN_W);
+            font_set_line_color(65535, overlay_mug[0][0]);
+        }
     }
     else
     {
-        int line = vga_line - (SCREEN_H-OVERLAY_HEIGHT+MARGIN_Y);
+        int line = vga_line - MARGIN_Y;
         overlay_picture_line(line);
         int y = line % LINE_HEIGHT;
         line /= LINE_HEIGHT;
