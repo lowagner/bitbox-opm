@@ -20,9 +20,19 @@ void physics_slow_time(int amount)
     physics_wait = amount > physics_wait ? amount : physics_wait;
 }
 
+float physics_dt()
+{
+    return 1.0/physics_wait;
+}
+
+int physics_inverse_dt()
+{
+    return physics_wait;
+}
+
 void physics_frame()
 {
-    float dt = 1.0/physics_wait;
+    float dt = physics_dt();
     player_frame(dt);
     draw_frame(dt);
 

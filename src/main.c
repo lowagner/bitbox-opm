@@ -89,4 +89,17 @@ void graph_line()
             break;
     }
     draw_line();
+    if (vga_line/8 == 1)
+    {
+        static char buffer[4] = {0};
+        if (vga_line == 8)
+        {
+            int inverse_dt = physics_inverse_dt();
+            buffer[0] = '0'+(inverse_dt/100)%10;
+            buffer[1] = '0'+(inverse_dt/10)%10;
+            buffer[2] = '0'+inverse_dt%10;
+        }
+        font_set_line_color(RGB(255,255,255),0);
+        font_render_line(buffer, 3, vga_line-8);
+    }
 }
