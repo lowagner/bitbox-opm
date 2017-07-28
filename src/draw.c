@@ -241,12 +241,12 @@ void draw_add_player(int p)
     draw_add_projectile(32*p+1, 32*p+15);
 }
 
-void draw_add_projectile(int k_min, int k_max)
+int draw_add_projectile(int k_min, int k_max)
 {
     if (quads[k_min].draw_index != 0)
     {
         message("can't add projectile, it's already there %d (%d to %d)\n", quads[k_min].draw_index, k_min, k_max);
-        return;
+        return 1;
     }
     message("adding projectile from %d to %d\n", k_min, k_max);
     int i;
@@ -269,4 +269,5 @@ void draw_add_projectile(int k_min, int k_max)
     }
 
     draw_count += delta;
+    return 0;
 }
