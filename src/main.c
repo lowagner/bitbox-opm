@@ -42,6 +42,7 @@ void game_init()
     map_offset_x = 0;
     font_init();
     physics_init();
+    draw_init();
     level = level_none;
     game_switch(level_rentbox);
     player_init();

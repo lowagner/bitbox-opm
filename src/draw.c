@@ -6,6 +6,13 @@ struct quad quads[256] CCM_MEMORY;
 int draw_count CCM_MEMORY;
 int check_draw_index CCM_MEMORY;
 
+void draw_init()
+{
+    draw_count = 0;
+    for (int i=0; i<256; ++i)
+        quads[i].draw_index = 0;
+}
+
 void draw_setup_quad(int k, int x1, int y1, int x2, int y2, int min_length)
 {
     #define ORDER(z1, z2) if (z2 < z1) { int z = z2; z2 = z1; z1 = z; }
@@ -49,6 +56,7 @@ void draw_remove_old_projectiles(float dt)
         struct quad *q = &quads[draw_order[i]];
         if (!q->lifetime || (q->lifetime -= dt, q->lifetime > 0))
             continue;
+        q->draw_index = 0;
         break;
     }
     int delta = 1;
@@ -64,8 +72,11 @@ void draw_remove_old_projectiles(float dt)
             q->draw_index = i++;
         }
         else
+        {
             // quad q is not to be drawn anymore.
             ++delta;
+            q->draw_index = 0;
+        }
     }
     draw_count -= delta;
 }
@@ -232,6 +243,11 @@ void draw_add_player(int p)
 
 void draw_add_projectile(int k_min, int k_max)
 {
+    if (quads[k_min].draw_index != 0)
+    {
+        message("can't add projectile, it's already there %d (%d to %d)\n", quads[k_min].draw_index, k_min, k_max);
+        return;
+    }
     message("adding projectile from %d to %d\n", k_min, k_max);
     int i;
     for (i=0; i<draw_count; ++i)

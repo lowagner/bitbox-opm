@@ -172,6 +172,7 @@ void opm_ground(int p, float dt)
                     quads[k+dk].ix += 1 - dy/2;
                     quads[k+dk].y += dy;
                     quads[k+dk].iy += dy;
+                    quads[k+dk].draw_index = 0;
                     quads[k+dk].lifetime = 32.0*dt;
                     quads[k+dk].vx = players[p].vx;
                     quads[k+dk].vy = players[p].vy;
