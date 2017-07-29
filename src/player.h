@@ -30,6 +30,7 @@ struct player
     float punch_charge;
     float jump_charge;
     float run_charge;
+    float kick_charge;
 
     struct animation animation;
     const struct animation_frame *all_frames;

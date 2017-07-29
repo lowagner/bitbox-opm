@@ -208,6 +208,34 @@ void opm_ground(int p, float dt)
         players[p].punch_charge = 0;
         next_frame = ANIM_PUNCH_R_0 + next_frame;
     }
+    else if (GAMEPAD_PRESSED(p, A))
+    {
+        if (players[p].kick_charge == 0)
+        {
+            players[p].kick_charge += 0.5 + dt;
+            animation_interrupt(p, ANIM_KICK_R_0 + 2 - ((from_frame%4)/2)*2);
+            return;
+        }
+        else
+        {
+            players[p].kick_charge += 0.5 + dt;
+            if (players[p].kick_charge > 256)
+            {
+                players[p].kick_charge = 256;
+                goto kick_now;
+            }
+            next_frame = to_frame;
+        }
+    }
+    else if (players[p].kick_charge)
+    {
+        kick_now:
+        next_frame = ((next_frame%4)/2)*2;
+        animation_interrupt(p, ANIM_KICK_R_1 + next_frame);
+        frame_rate = 8*players[p].kick_charge;
+        players[p].kick_charge = 0;
+        next_frame = ANIM_KICK_R_0 + next_frame;
+    }
     else if (GAMEPAD_PRESSED(p, right))
     {
         players[p].vx += 1 + 0.05*players[p].run_charge;
