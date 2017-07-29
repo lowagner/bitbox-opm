@@ -153,12 +153,13 @@ void opm_ground(int p, float dt)
                 to_frame = ANIM_PUNCH_R_1 + 2 - ((from_frame%4)/2)*2;
                 animation_interrupt(p, to_frame);
                 animation_tween(p, dt, 5.0/dt, to_frame & (~1));
-                message("consecutive normal punches to frame %d at %f\n", to_frame, 5.0/dt);
+                message("consecutive normal punches to frame %d at rate %f\n", to_frame, 5.0/dt);
                 players[p].custom += 2;
                 if (players[p].custom >= 16 - 1)
                     players[p].custom = 1;
                 int k = 32*p + 16 + players[p].custom;
                 int dy = 1 + 3*(rand()%6);
+                int draw_indices[2] = {quads[k].draw_index, quads[k+1].draw_index};
                 if (from_frame == ANIM_PUNCH_R_1)
                     memcpy(&quads[k], &quads[32*p+1 + 3 + 3 + 1], 2*sizeof(struct quad));
                 else
@@ -172,11 +173,11 @@ void opm_ground(int p, float dt)
                     quads[k+dk].ix += 1 - dy/2;
                     quads[k+dk].y += dy;
                     quads[k+dk].iy += dy;
-                    quads[k+dk].draw_index = 0;
-                    quads[k+dk].lifetime = 32.0*dt;
-                    quads[k+dk].vx = players[p].vx;
-                    quads[k+dk].vy = players[p].vy;
-                    quads[k+dk].vz = players[p].vz;
+                    quads[k+dk].draw_index = draw_indices[dk];
+                    quads[k+dk].lifetime = -8.5;
+                    //quads[k+dk].vx = players[p].vx + 128.0/dt;
+                    //quads[k+dk].vy = players[p].vy;
+                    //quads[k+dk].vz = players[p].vz;
                 }
                 draw_add_projectile(k, k+1);
             }

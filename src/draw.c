@@ -34,6 +34,67 @@ void draw_setup_quad(int k, int x1, int y1, int x2, int y2, int min_length)
 
 uint8_t draw_order[256] CCM_MEMORY;
 
+int quad_update_is_alive(struct quad *q, float dt)
+{
+    if (q->lifetime == 0.0f)
+        return 1;
+    if (q->lifetime > 0.0f)
+    {
+        q->lifetime -= dt;
+        if (q->lifetime <= 0.0f)
+            goto quad_update_kill;
+        q->x += q->vx*dt;
+        q->y += q->vy*dt;
+        q->z += q->vz*dt;
+        q->ix = round(q->x - map_offset_x);
+        q->iy = STREET_LEVEL_Y + round(q->y + q->z);
+    }
+    else
+    {
+        //message("life time is %f\n", q->lifetime);
+        if (++q->lifetime >= 0.0f)
+            goto quad_update_kill;
+    }
+    return 1;
+
+    quad_update_kill:
+    //message("removing quad %d\n", (int)(q-quads));
+    q->draw_index = 0;
+    return 0;
+}
+
+void draw_update_projectiles(float dt)
+{
+    int i = 0; // don't use draw_order[0] for anything...
+    while (1)
+    {
+        if (++i > draw_count)
+            return;
+        struct quad *q = &quads[draw_order[i]];
+        //message("checking %d -> %d\n", i, draw_order[i]);
+        if (!quad_update_is_alive(q, dt))
+            break;
+    }
+    int delta = 1;
+    while (1)
+    {
+        if (i + delta > draw_count)
+            break;
+        struct quad *q = &quads[draw_order[i+delta]];
+        //message("checking %d -> %d\n", i+delta, draw_order[i+delta]);
+        if (quad_update_is_alive(q, dt))
+        {
+            // quad q is still in the running, bring it down
+            draw_order[i] = draw_order[i+delta];
+            q->draw_index = i++;
+        }
+        else
+            // quad q is not to be drawn anymore.
+            ++delta;
+    }
+    draw_count -= delta;
+}
+
 static inline void swap_draw_order_k_kminus1(int k)
 {
     int quad_kminus1 = draw_order[k-1];
@@ -46,51 +107,16 @@ static inline void swap_draw_order_k_kminus1(int k)
     draw_order[k] = quad_kminus1;
 }
 
-void draw_remove_old_projectiles(float dt)
-{
-    int i=-1;
-    while (1)
-    {
-        if (++i >= draw_count)
-            return;
-        struct quad *q = &quads[draw_order[i]];
-        if (!q->lifetime || (q->lifetime -= dt, q->lifetime > 0))
-            continue;
-        q->draw_index = 0;
-        break;
-    }
-    int delta = 1;
-    while (1)
-    {
-        if (i + delta >= draw_count)
-            break;
-        struct quad *q = &quads[draw_order[i+delta]];
-        if (!q->lifetime || (q->lifetime -= dt, q->lifetime > 0))
-        {
-            // quad q is still in the running, bring it down
-            draw_order[i] = draw_order[i+delta];
-            q->draw_index = i++;
-        }
-        else
-        {
-            // quad q is not to be drawn anymore.
-            ++delta;
-            q->draw_index = 0;
-        }
-    }
-    draw_count -= delta;
-}
-
 void draw_frame(float dt)
 {
     if (dt)
-        draw_remove_old_projectiles(dt);
+        draw_update_projectiles(dt);
     
     // insertion sort all the drawing quads on the map
-    for (int j=0; j<draw_count-1; ++j)
+    for (int j=2; j<=draw_count; ++j)
     {
         // move quad k as far up as it should be.
-        for (int k=j+1; k > 0 && quads[draw_order[k-1]].iy > quads[draw_order[k]].iy; --k)
+        for (int k=j; k > 1 && quads[draw_order[k-1]].iy > quads[draw_order[k]].iy; --k)
             swap_draw_order_k_kminus1(k);
     }
    
@@ -106,28 +132,25 @@ void draw_line()
         return;
     int16_t vga16 = (int16_t) vga_line;
     // add any new quads to the draw line:
-    while (check_draw_index < draw_count)
+    while (check_draw_index <= draw_count)
     {
         uint8_t current = draw_order[check_draw_index];
-        if (quads[current].iy <= vga16) 
-        {
-            // add current to the (sorted!) linked list
-            uint8_t previous = 0;
-            uint8_t next = quads[0].next;
-            while (next)
-            {
-                if (quads[next].y > quads[current].y)
-                    break;
-                previous = next;
-                next = quads[previous].next;
-            }
-            quads[previous].next = current;
-            quads[current].next = next;
-
-            ++check_draw_index;
-        }
-        else
+        if (quads[current].iy > vga16) 
             break;
+        // add current to the (sorted!) linked list
+        uint8_t previous = 0;
+        uint8_t next = quads[0].next;
+        while (next)
+        {
+            if (quads[next].y > quads[current].y)
+                break;
+            previous = next;
+            next = quads[previous].next;
+        }
+        quads[previous].next = current;
+        quads[current].next = next;
+
+        ++check_draw_index;
     }
     // draw on-screen and currently visible (on this line) quads
     uint8_t previous = 0;
@@ -210,10 +233,10 @@ void draw_line()
 
 void draw_remove_player(int p)
 {
-    int i=-1;
+    int i = 0;
     while (1)
     {
-        if (++i >= draw_count)
+        if (++i > draw_count)
             return;
         if (draw_order[i]/32 == p)
             break;
@@ -221,7 +244,7 @@ void draw_remove_player(int p)
     int delta = 1;
     while (1)
     {
-        if (i + delta >= draw_count)
+        if (i + delta > draw_count)
             break;
         if (draw_order[i+delta]/32 == p)
             ++delta;
@@ -243,31 +266,45 @@ void draw_add_player(int p)
 
 int draw_add_projectile(int k_min, int k_max)
 {
-    if (quads[k_min].draw_index != 0)
+    //message("adding projectile from %d to %d, ", k_min, k_max);
+    int ret_val = 0;
+    static int quads_to_add[16];
+    int total_added = 0;
+    for (int k=k_min; k<=k_max; ++k)
     {
-        message("can't add projectile, it's already there %d (%d to %d)\n", quads[k_min].draw_index, k_min, k_max);
-        return 1;
+        if (quads[k].draw_index == 0)
+            quads_to_add[total_added++] = k;
+        else
+            ret_val = 1;
     }
-    message("adding projectile from %d to %d\n", k_min, k_max);
+    if (total_added == 0)
+    {
+        //message("no quad additions necessary!\n");
+        return ret_val; // should be 1
+    }
+    //message("need to add %d quads to draw list\n", total_added);
     int i;
-    for (i=0; i<draw_count; ++i)
+    k_min = quads_to_add[0];
+    for (i=1; i<=draw_count; ++i)
     {
         if (quads[draw_order[i]].iy > quads[k_min].iy)
             break;
     }
-    int delta = k_max - k_min + 1;
-    for (int j=draw_count-1; j>=i; --j)
+    // shuffle all previous guys up:
+    for (int j=draw_count; j>=i; --j)
     {
-        draw_order[j+delta] = draw_order[j];
-        quads[draw_order[j+delta]].draw_index = j + delta;
+        int k = draw_order[j+total_added] = draw_order[j];
+        quads[k].draw_index = j + total_added;
+    }
+    // insert new quads:
+    for (int delta=0; delta<total_added; ++delta)
+    {
+        int k = quads_to_add[delta];
+        //message("adding %d\n", k);
+        draw_order[i+delta] = k;
+        quads[k].draw_index = i+delta;
     }
 
-    for (int j=0; j<delta; ++j)
-    {
-        draw_order[i+j] = k_min+j;
-        quads[k_min+j].draw_index = i+j;
-    }
-
-    draw_count += delta;
-    return 0;
+    draw_count += total_added;
+    return ret_val;
 }
