@@ -8,7 +8,7 @@
 void animation_reset(int p, int start_frame, int next_frame)
 {
     players[p].animation.tween = 0;
-    players[p].animation.frames[0] = -1;
+    players[p].animation.frames[0] = ANIM_COUNT | (next_frame&128);
     players[p].animation.frames[1] = start_frame;
     players[p].animation.frames[2] = next_frame;
     players[p].animation.mix_from_to = 0 | (1 << 2) | (2 << 4);
@@ -31,8 +31,7 @@ void animation_interrupt(int p, int next_frame)
 
     players[p].animation.mix_from_to = (a_mix) | (a_from << 2) | (a_to << 4);
     
-    //players[p].animation.frames[a_from] = -1; // already true, since 'from' was 'mix'
-    players[p].animation.frames[a_mix] = -1; // needed to be confessed.
+    players[p].animation.frames[a_mix] = ANIM_COUNT | (next_frame&128); // mix needed to be confessed.
     
     _animation_copy_to(p, a_to, next_frame);
 }

@@ -79,8 +79,9 @@ void individual_player_frame(int p, float dt)
         players[p].vz = 0;
         if (previously_in_air)
         {
-            animation_interrupt(p, ANIM_CROUCH_R);
-            animation_tween(p, dt, 0.4, ANIM_CROUCH_L);
+            int facing = ANIM_TO(p) & 128;
+            animation_interrupt(p, ANIM_CROUCH_R | facing);
+            animation_tween(p, dt, 0.4, ANIM_CROUCH_L | facing);
         }
         else
             switch_player_ground(p, dt);
@@ -181,7 +182,7 @@ void player_start_level()
     for (int i=0; i<2; ++i)
     {
         players[i].x = 0;
-        players[i].y = 64*i;
+        players[i].y = 32+64*i;
         players[i].z = 0;
         players[i].vx = 0;
         players[i].vy = 0;

@@ -82,6 +82,7 @@ with open("src/switch_animation.h", 'w') as f:
         f.write('#define ANIM_%s %d\n'%(a.upper(), i))
         i += 1
     f.write('#define ANIM_COUNT %d\n'%i)
+    f.write('#define ANIM_FACE_LEFT 128\n')
 
     f.write('typedef struct animation_core\n{\n')
     for p in core:
@@ -124,12 +125,27 @@ with open("src/switch_animation.c", 'w') as f:
     f.write('void _animation_copy_to(int p, int a_to, int next_frame)\n{\n')
     f.write('\tif (players[p].animation.frames[a_to] == next_frame)\n\t\treturn;\n')
     f.write('\tplayers[p].animation.frames[a_to] = next_frame;\n')
-    f.write('\tconst struct animation_frame *frame = &players[p].all_frames[next_frame];\n')
+    f.write('\tconst struct animation_frame *frame = &players[p].all_frames[next_frame&(~ANIM_FACE_LEFT)];\n')
+    f.write('\tif (!(next_frame&ANIM_FACE_LEFT))\n\t{\n')
     for p in core:
-        f.write('\tplayers[p].animation.core[a_to].%s = frame->core.%s;\n'%(p,p))
+        f.write('\t\tplayers[p].animation.core[a_to].%s = frame->core.%s;\n'%(p,p))
     for p in limbs:
-        f.write('\tplayers[p].animation.%s[a_to] = frame->%s;\n'%(p,p))
-    f.write('}\n\n')
+        f.write('\t\tplayers[p].animation.%s[a_to] = frame->%s;\n'%(p,p))
+    f.write('\t}\n\telse\n\t{\n')
+    f.write('\t\tanimation_absolute *a;\n')
+    f.write('\t\tanimation_limb *l;\n')
+    for p in core:
+        f.write('\t\ta = &players[p].animation.core[a_to].%s;\n'%p)
+        f.write('\t\t*a = frame->core.%s;\n'%p)
+        f.write('\t\ta->dx = -a->dx - a->width;\n')
+    for p in limbs:
+        f.write('\t\tl = &players[p].animation.%s[a_to];\n'%p)
+        f.write('\t\t*l = frame->%s;\n'%p)
+        if p in set(['R_elbow', 'L_elbow', 'R_knee', 'L_knee']):
+            f.write('\t\tl->angle = -128 - l->angle;\n')
+        else:
+            f.write('\t\tl->angle *= -1;\n')
+    f.write('\t}\n}\n')
 
     f.write('void _animation_tween(int p, const float delta, const float rate, const int a_mix, const int a_from, const int a_to)\n{\n')
     f.write('\tconst float tween_to = players[p].animation.tween;\n')

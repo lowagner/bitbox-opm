@@ -99,8 +99,14 @@ static const float opm_frame_rates[ANIM_COUNT] = {
 void opm_ground(int p, float dt)
 {
     int from_frame = ANIM_FROM(p);
+    //int from_flipped = from_frame & ANIM_FACE_LEFT;
+    from_frame &= ~ANIM_FACE_LEFT;
     int to_frame = ANIM_TO(p);
+    int to_flipped = to_frame & ANIM_FACE_LEFT;
+    to_frame &= ~ANIM_FACE_LEFT;
     int next_frame = opm_next_frames[to_frame];
+    int next_flipped = to_flipped;
+
     static float frame_rate = 0.25;
     if (to_frame/4 != ANIM_PUNCH_R_0/4 || to_frame % 2 == 0)
         frame_rate = opm_frame_rates[to_frame];
@@ -113,7 +119,7 @@ void opm_ground(int p, float dt)
     if (GAMEPAD_PRESSED(p, L))
     {
         if (players[p].jump_charge == 0)
-            animation_interrupt(p, ANIM_CROUCH_R);
+            animation_interrupt(p, ANIM_CROUCH_R | next_flipped);
         players[p].jump_charge += 1.0f/16.0f + 0.5*dt;
         if (players[p].jump_charge >= 256)
         {
@@ -134,7 +140,7 @@ void opm_ground(int p, float dt)
         players[p].vy *= 2.0;
         players[p].vz = -players[p].jump_charge;
         players[p].jump_charge = 0;
-        animation_interrupt(p, ANIM_FLY_0);
+        animation_interrupt(p, ANIM_FLY_0 | next_flipped);
         frame_rate = opm_frame_rates[ANIM_FLY_0];
         next_frame = ANIM_FLY_1;
         // the above line does nothing if we return...
@@ -146,13 +152,14 @@ void opm_ground(int p, float dt)
     
     if (GAMEPAD_PRESSED(p, B))
     {
+        players[p].jump_charge = 0;
         if (players[p].punch_charge == 0)
         {
             if (dt != 1 && from_frame/4 == ANIM_PUNCH_R_0/4)
             {
                 to_frame = ANIM_PUNCH_R_1 + 2 - ((from_frame%4)/2)*2;
-                animation_interrupt(p, to_frame);
-                animation_tween(p, dt, 5.0/dt, to_frame & (~1));
+                animation_interrupt(p, to_frame | next_flipped);
+                animation_tween(p, dt, 5.0/dt, (to_frame & (~1)) | next_flipped);
                 message("consecutive normal punches to frame %d at rate %f\n", to_frame, 5.0/dt);
                 players[p].custom += 2;
                 if (players[p].custom >= 16 - 1)
@@ -184,7 +191,7 @@ void opm_ground(int p, float dt)
             else
             {
                 players[p].punch_charge += 0.5 + dt;
-                animation_interrupt(p, ANIM_PUNCH_R_0 + 2 - ((from_frame%4)/2)*2);
+                animation_interrupt(p, (ANIM_PUNCH_R_0 + 2 - ((from_frame%4)/2)*2) | next_flipped);
             }
             return;
         }
@@ -203,17 +210,18 @@ void opm_ground(int p, float dt)
     {
         punch_now:
         next_frame = ((next_frame%4)/2)*2;
-        animation_interrupt(p, ANIM_PUNCH_R_1 + next_frame);
+        animation_interrupt(p, (ANIM_PUNCH_R_1 + next_frame) | next_flipped);
         frame_rate = 8*players[p].punch_charge;
         players[p].punch_charge = 0;
         next_frame = ANIM_PUNCH_R_0 + next_frame;
     }
     else if (GAMEPAD_PRESSED(p, A))
     {
+        players[p].jump_charge = 0;
         if (players[p].kick_charge == 0)
         {
             players[p].kick_charge += 0.5 + dt;
-            animation_interrupt(p, ANIM_KICK_R_0 + 2 - ((from_frame%4)/2)*2);
+            animation_interrupt(p, (ANIM_KICK_R_0 + 2 - ((from_frame%4)/2)*2) | next_flipped);
             return;
         }
         else
@@ -231,7 +239,7 @@ void opm_ground(int p, float dt)
     {
         kick_now:
         next_frame = ((next_frame%4)/2)*2;
-        animation_interrupt(p, ANIM_KICK_R_1 + next_frame);
+        animation_interrupt(p, (ANIM_KICK_R_1 + next_frame)|next_flipped);
         frame_rate = 8*players[p].kick_charge;
         players[p].kick_charge = 0;
         next_frame = ANIM_KICK_R_0 + next_frame;
@@ -348,7 +356,7 @@ void opm_ground(int p, float dt)
     frame_rate /= dt;
     // the other part is invincibility.
     
-    animation_tween(p, dt, frame_rate, next_frame);
+    animation_tween(p, dt, frame_rate, next_frame | next_flipped);
 }
 
 void opm_air(int p, float dt)
@@ -359,10 +367,12 @@ void opm_air(int p, float dt)
         physics_slow_time(players[p].run_charge);
 
     int to_frame = ANIM_TO(p);
+    int to_flipped = to_frame & ANIM_FACE_LEFT;
+    to_frame &= ~ANIM_FACE_LEFT;
     if (to_frame/2 == ANIM_FLY_0/2)
-        animation_tween(p, dt, 0.1, ANIM_FLY_0 | (1-(to_frame&1)));
+        animation_tween(p, dt, 0.1, ANIM_FLY_0 | (1-(to_frame&1)) | to_flipped);
     else
-        animation_tween(p, dt, 0.1, ANIM_FLY_0);
+        animation_tween(p, dt, 0.1, ANIM_FLY_0 | to_flipped);
 }
 
 void opm_line(int p)
