@@ -247,6 +247,8 @@ void opm_ground(int p, float dt)
     else if (GAMEPAD_PRESSED(p, right))
     {
         players[p].vx += 1 + 0.05*players[p].run_charge;
+        if (players[p].vx > 0)
+            next_flipped = 0;
         if (vga_frame % 64 == 0)
             message("vx is %f\n", players[p].vx);
         if (GAMEPAD_PRESSED(p, L))
@@ -277,6 +279,8 @@ void opm_ground(int p, float dt)
     else if (GAMEPAD_PRESSED(p, left))
     {
         players[p].vx -= 1 + 0.05*players[p].run_charge;
+        if (players[p].vx < 0)
+            next_flipped = ANIM_FACE_LEFT;
         slow_down_time = 0;
         if (GAMEPAD_PRESSED(p, L))
         {
