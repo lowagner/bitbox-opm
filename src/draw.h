@@ -25,6 +25,7 @@ void draw_init();
 void draw_frame(float dt);
 void draw_line();
 void draw_setup_quad(int k, int x1, int y1, int x2, int y2, int min_length);
+void draw_setup_quad2(int k, int x1, int y1, int x2, int y2, int min_width, int min_height);
 
 void draw_remove_player(int p);
 void draw_add_player(int p);

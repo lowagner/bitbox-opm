@@ -13,11 +13,12 @@ void draw_init()
         quads[i].draw_index = 0;
 }
 
+#define ORDER(z1, z2) if (z2 < z1) { int z = z2; z2 = z1; z1 = z; }
+#define MAY_EXPAND(length, z1) if (length < min_length) { z1 -= (min_length-length)/2; length = min_length; }
+#define MAY_EXPAND2(length, z1) if (length < min_##length) { z1 -= (min_##length-length)/2; length = min_##length; }
+
 void draw_setup_quad(int k, int x1, int y1, int x2, int y2, int min_length)
 {
-    #define ORDER(z1, z2) if (z2 < z1) { int z = z2; z2 = z1; z1 = z; }
-    #define MAY_EXPAND(length, z1) if (length < min_length) { z1 -= (min_length-length)/2; length = min_length; }
-
     ORDER(y1, y2);
     int height = y2 - y1;
     MAY_EXPAND(height, y1);
@@ -25,6 +26,22 @@ void draw_setup_quad(int k, int x1, int y1, int x2, int y2, int min_length)
     ORDER(x1, x2);
     int width = x2 - x1;
     MAY_EXPAND(width, x1);
+
+    quads[k].ix = x1;
+    quads[k].iy = y1;
+    quads[k].width = width;
+    quads[k].height = height;
+}
+
+void draw_setup_quad2(int k, int x1, int y1, int x2, int y2, int min_width, int min_height)
+{
+    ORDER(y1, y2);
+    int height = y2 - y1;
+    MAY_EXPAND2(height, y1);
+    
+    ORDER(x1, x2);
+    int width = x2 - x1;
+    MAY_EXPAND2(width, x1);
 
     quads[k].ix = x1;
     quads[k].iy = y1;

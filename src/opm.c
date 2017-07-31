@@ -7,6 +7,16 @@ void opm_start_level(int p)
     players[p].vz = -10;
     players[p].vx = 3;
     players[p].custom = 4;
+    int k=32*p + 18;
+    for (int dk=0; dk<2; ++dk)
+    {
+        quads[k+dk].x = players[p].x;
+        quads[k+dk].y = players[p].y;
+        quads[k+dk].color = RGB(255,255,255);
+        quads[k+dk].edge_color = RGB(200,200,200);
+        quads[k+dk].lifetime = 0;
+    }
+    draw_add_projectile(k, k+1);
 }
 
 static inline int opm_run_charge(int p, float dt)
@@ -197,13 +207,6 @@ void opm_ground(int p, float dt)
         }
         else
         {
-            players[p].punch_charge += 0.5 + dt;
-            if (players[p].punch_charge > 256)
-            {
-                players[p].punch_charge = 256;
-                goto punch_now;
-            }
-            next_frame = to_frame;
             if (next_flipped)
             {
                 if (GAMEPAD_PRESSED(p, right))
@@ -211,6 +214,13 @@ void opm_ground(int p, float dt)
             }
             else if (GAMEPAD_PRESSED(p, left))
                 next_flipped = ANIM_FACE_LEFT;
+            players[p].punch_charge += 0.5 + dt;
+            if (players[p].punch_charge > 256)
+            {
+                players[p].punch_charge = 256;
+                goto punch_now;
+            }
+            next_frame = to_frame;
         }
     }
     else if (players[p].punch_charge)
@@ -432,6 +442,20 @@ void opm_projectile(int p, float dt)
         opm_punch_wind(k, dt);
     if (quads[++k].draw_index)
         opm_punch_wind(k, dt);
+    ++k;
+    int ix1 = quads[k-16].ix-5;
+    int ix2 = ix1 + 10;
+    int iy1 = quads[k-16].iy;
+    int iy2 = iy1 + 10;
+    draw_setup_quad2(k, ix1, iy1, ix2, iy2, 16, 4);
+    
+    iy1 += 10;
+    ix1 -= 5;
+    ix2 -= 5;
+    iy2 += 15;
+    draw_setup_quad2(k+1, ix1, iy1, ix2, iy2, 16, 4);
+
+    quads[k+1].y = quads[k].y = quads[k-16].y-0.1;
 }
 
 void opm_line(int p)
