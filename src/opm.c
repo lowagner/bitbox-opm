@@ -204,6 +204,13 @@ void opm_ground(int p, float dt)
                 goto punch_now;
             }
             next_frame = to_frame;
+            if (next_flipped)
+            {
+                if (GAMEPAD_PRESSED(p, right))
+                    next_flipped = 0;
+            }
+            else if (GAMEPAD_PRESSED(p, left))
+                next_flipped = ANIM_FACE_LEFT;
         }
     }
     else if (players[p].punch_charge)
@@ -229,7 +236,10 @@ void opm_ground(int p, float dt)
             quads[k].y -= width/2;
             quads[k].height = width;
             quads[k].width = width;
-            quads[k].vx += width;
+            if (!next_flipped)
+                quads[k].vx += width;
+            else
+                quads[k].vx -= width;
             quads[k].lifetime = players[p].punch_charge;
             quads[k].color = RGB(130,130,130);
             quads[k].edge_color = RGB(250,250,250);
