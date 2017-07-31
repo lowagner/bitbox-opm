@@ -403,6 +403,27 @@ void opm_air(int p, float dt)
         animation_tween(p, dt, 0.1, ANIM_FLY_0 | to_flipped);
 }
 
+static inline void opm_punch_wind(int k, float dt)
+{
+    quads[k].y -= dt;
+    quads[k].x -= dt;
+    int inv_dt = 1.0/dt;
+    if (vga_frame % inv_dt == 0 && quads[k].width < 254)
+    {
+        quads[k].width += 2;
+        quads[k].height += 2;
+    }
+}
+
+void opm_projectile(int p, float dt)
+{
+    int k=32*p+16;
+    if (quads[k].draw_index)
+        opm_punch_wind(k, dt);
+    if (quads[++k].draw_index)
+        opm_punch_wind(k, dt);
+}
+
 void opm_line(int p)
 {
     if (vga_line + opm_height <= players[p].iy || vga_line > players[p].iy)

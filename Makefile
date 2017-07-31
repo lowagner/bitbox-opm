@@ -121,6 +121,7 @@ src/characters.h: Makefile $(CHARACTERS_C)
 	 echo "void $${c}_start_level(int p);" >> $@; \
 	 echo "void $${c}_ground(int p, float dt);" >> $@; \
 	 echo "void $${c}_air(int p, float dt);" >> $@; \
+	 echo "void $${c}_projectile(int p, float dt);" >> $@; \
 	 echo "void $${c}_line(int p);" >> $@; \
 	 echo "extern const animation_frame frames_$${c}[ANIM_COUNT];" >> $@; \
 	 echo "extern const uint16_t colors_$${c}[16];" >> $@; \
@@ -141,6 +142,7 @@ src/switch_player.c: Makefile
 	@for c in $(CHARACTERS); do \
 	 echo "		case CHARACTER_$$c:" >> $@; \
 	 echo "			$${c}_ground(p, dt);" >> $@; \
+	 echo "			$${c}_projectile(p, dt);" >> $@; \
 	 echo "			break;" >> $@; \
 	done
 	@echo "	}" >> $@
@@ -152,6 +154,7 @@ src/switch_player.c: Makefile
 	@for c in $(CHARACTERS); do \
 	 echo "		case CHARACTER_$$c:" >> $@; \
 	 echo "			$${c}_air(p, dt);" >> $@; \
+	 echo "			$${c}_projectile(p, dt);" >> $@; \
 	 echo "			break;" >> $@; \
 	done
 	@echo "	}" >> $@
