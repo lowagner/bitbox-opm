@@ -6,7 +6,7 @@ void opm_start_level(int p)
 {
     players[p].vz = -10;
     players[p].vx = 3;
-    players[p].custom = 1;
+    players[p].custom = 4;
 }
 
 static inline int opm_run_charge(int p, float dt)
@@ -163,7 +163,7 @@ void opm_ground(int p, float dt)
                 message("consecutive normal punches to frame %d at rate %f\n", to_frame, 5.0/dt);
                 players[p].custom += 2;
                 if (players[p].custom >= 16 - 1)
-                    players[p].custom = 1;
+                    players[p].custom = 4;
                 int k = 32*p + 16 + players[p].custom;
                 int dy = 1 + 3*(rand()%6);
                 int draw_indices[2] = {quads[k].draw_index, quads[k+1].draw_index};
@@ -211,7 +211,31 @@ void opm_ground(int p, float dt)
         punch_now:
         next_frame = ((next_frame%4)/2)*2;
         animation_interrupt(p, (ANIM_PUNCH_R_1 + next_frame) | next_flipped);
-        frame_rate = 8*players[p].punch_charge;
+        frame_rate = 256*players[p].punch_charge;
+        if (players[p].punch_charge > 16)
+        {
+            message("firing off a punch\n");
+            int k=32*p + 16;
+            if (quads[k].draw_index)
+            {
+                ++k;
+                if (quads[k].draw_index)
+                    goto punch_finalize;
+            }
+            memcpy(&quads[k], &quads[32*p+3 + 3*(next_frame/2) + 2], sizeof(struct quad));
+            int width = 4+players[p].punch_charge/4;
+            quads[k].draw_index = 0;
+            quads[k].x += 3;
+            quads[k].y -= width/2;
+            quads[k].height = width;
+            quads[k].width = width;
+            quads[k].vx += width;
+            quads[k].lifetime = players[p].punch_charge;
+            quads[k].color = RGB(130,130,130);
+            quads[k].edge_color = RGB(250,250,250);
+            draw_add_projectile(k, k);
+        }
+        punch_finalize:
         players[p].punch_charge = 0;
         next_frame = ANIM_PUNCH_R_0 + next_frame;
     }
