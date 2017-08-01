@@ -64,7 +64,7 @@ int quad_update_is_alive(struct quad *q, float dt)
         q->y += q->vy*dt;
         q->z += q->vz*dt;
         q->ix = round(q->x - map_offset_x);
-        if ((q->ix > SCREEN_W+4096) || (4096 + q->ix + q->width < 0))
+        if ((q->ix > SCREEN_W*2) || (SCREEN_W + q->ix + q->width < 0))
             goto quad_update_kill;
         q->iy = STREET_LEVEL_Y + round(q->y + q->z);
     }

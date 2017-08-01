@@ -1,5 +1,7 @@
 #define OPM_PHASE 
 
+#define CAPE_LENGTH 15.0f
+
 const int opm_height=30, opm_half_width=5;
 
 void opm_start_level(int p)
@@ -12,6 +14,10 @@ void opm_start_level(int p)
     {
         quads[k+dk].x = players[p].x;
         quads[k+dk].y = players[p].y;
+        quads[k+dk].z = players[p].z;
+        quads[k+dk].vx = 0;
+        quads[k+dk].vy = 0;
+        quads[k+dk].vz = 0;
         quads[k+dk].color = RGB(255,255,255);
         quads[k+dk].edge_color = RGB(200,200,200);
         quads[k+dk].lifetime = 0;
@@ -435,6 +441,11 @@ static inline void opm_punch_wind(int k, float dt)
     }
 }
 
+float sqr(float x)
+{
+    return x*x;
+}
+
 void opm_projectile(int p, float dt)
 {
     int k=32*p+16;
@@ -443,19 +454,72 @@ void opm_projectile(int p, float dt)
     if (quads[++k].draw_index)
         opm_punch_wind(k, dt);
     ++k;
-    int ix1 = quads[k-16].ix-5;
-    int ix2 = ix1 + 10;
-    int iy1 = quads[k-16].iy;
-    int iy2 = iy1 + 10;
-    draw_setup_quad2(k, ix1, iy1, ix2, iy2, 16, 4);
-    
-    iy1 += 10;
-    ix1 -= 5;
-    ix2 -= 5;
-    iy2 += 15;
-    draw_setup_quad2(k+1, ix1, iy1, ix2, iy2, 16, 4);
 
-    quads[k+1].y = quads[k].y = quads[k-16].y-0.1;
+    float x0 = quads[k-16].x + quads[k-16].width/2;
+    float y0 = quads[k-16].y;
+    float z0 = quads[k-16].z;
+    float *px1 = &quads[k].x;
+    float *pz1 = &quads[k].z;
+    quads[k+1].y = quads[k].y = y0 - 0.1;
+    float *px2 = &quads[k+1].x;
+    float *pz2 = &quads[k+1].z;
+
+    dt += 0.1;
+    float dx = x0 - *px1;
+    float dz = z0 - *pz1;
+    *pz1 += gravity * dt;
+    float mag_squared = sqr(dx) + sqr(dz);
+    if (mag_squared > CAPE_LENGTH*CAPE_LENGTH)
+    {
+        if (fabs(dx) < 0.25 && fabs(fabs(dz) - CAPE_LENGTH) < 0.25)
+            *pz1 -= gravity * dt;
+        else if (mag_squared > (CAPE_LENGTH+4.0f)*(CAPE_LENGTH+4.0f))
+        {
+            float mag = sqrt(mag_squared);
+            float norm = (CAPE_LENGTH*dt + 0.25f*mag)/(0.25f+dt)/mag;
+            *px1 = x0 - dx*norm;
+            *pz1 = z0 - dz*norm;
+        }
+        else
+        {
+            *px1 += 0.1*dx*dt;
+            *pz1 += 0.1*dz*dt;
+        }
+    }
+
+    int ix0 = round(x0-map_offset_x);
+    int ix1 = round(*px1-map_offset_x);
+    int iy0 = STREET_LEVEL_Y + (int)round(y0+z0);
+    int iy1 = STREET_LEVEL_Y + (int)round(y0+*pz1);
+    draw_setup_quad2(k, ix0, iy0, ix1, iy1, 16, 4);
+   
+    // needs refactoring, this is mostly a duplicate of the above:
+    *pz2 += gravity * dt;
+    dx = *px1 - *px2;
+    dz = *pz1 - *pz2;
+    mag_squared = sqr(dx) + sqr(dz);
+    if (mag_squared > CAPE_LENGTH*CAPE_LENGTH)
+    {
+        if (fabs(dx) < 0.75 && fabs(fabs(dz) - CAPE_LENGTH) < 0.75)
+            *pz2 -= gravity * dt;
+        else if (mag_squared > (CAPE_LENGTH+4.0f)*(CAPE_LENGTH+4.0f))
+        {
+            float mag = sqrt(mag_squared);
+            float norm = (CAPE_LENGTH*dt + 0.25f*mag)/(0.25f+dt)/mag;
+            *px2 = *px1 - dx*norm;
+            *pz2 = *pz1 - dz*norm;
+        }
+        else
+        {
+            *px2 += 0.1*dx*dt;
+            *pz2 += 0.1*dz*dt;
+        }
+        // should have a back effect on image point 1, ignoring for now
+    }
+    
+    ix0 = round(*px2-map_offset_x);
+    iy0 = STREET_LEVEL_Y + (int)round(y0+*pz2);
+    draw_setup_quad2(k+1, ix0, iy0, ix1, iy1, 16, 4);
 }
 
 void opm_line(int p)
