@@ -497,7 +497,10 @@ void opm_projectile(int p, float dt)
     float z0 = quads[k-16].z;
     float *px1 = &quads[k].x;
     float *pz1 = &quads[k].z;
-    quads[k+1].y = quads[k].y = y0 - 0.1;
+    if (ANIM_TO(p) & ANIM_FACE_LEFT)
+        quads[k+1].y = quads[k].y = y0 + 0.1;
+    else
+        quads[k+1].y = quads[k].y = y0 - 0.1;
     float *px2 = &quads[k+1].x;
     float *pz2 = &quads[k+1].z;
 
