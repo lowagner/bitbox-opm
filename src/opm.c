@@ -446,6 +446,43 @@ float sqr(float x)
     return x*x;
 }
 
+void opm_cape(int k, float x0, float y0, float z0, float *px1, float *pz1, float dt)
+{
+    // simulate gravity on cape:
+    *pz1 += gravity * dt;
+    float dx = *px1 - x0;
+    float dz = *pz1 - z0;
+    float mag_squared = sqr(dx) + sqr(dz);
+    if (mag_squared > CAPE_LENGTH*CAPE_LENGTH)
+    {
+        if (fabs(dx) < 0.75 && dz > 0 && fabs(dz - CAPE_LENGTH) < 0.75)
+            // cancel gravity force if cape (px1, pz1) is below its anchor point (x0, z0)
+            *pz1 -= gravity * dt;
+        else if (mag_squared > (CAPE_LENGTH+4.0f)*(CAPE_LENGTH+4.0f))
+        {
+            // cape is too stretched, renormalize the vector and pull it in (gradually):
+            float mag = sqrt(mag_squared);
+            float norm = (CAPE_LENGTH*dt + 0.25f*mag)/(0.25f+dt)/mag;
+            *px1 = x0 + dx*norm;
+            *pz1 = z0 + dz*norm;
+        }
+        else
+        {
+            // cape is slightly stretched, use spring force.
+            *px1 -= 0.1*dx*dt;
+            *pz1 -= 0.1*dz*dt;
+        }
+        // bottom of cape should have a back effect on mid cape, ignoring third law for now.
+    }
+  
+    // one of these gets recalculated twice, i think it's ok...
+    int ix0 = round(x0-map_offset_x);
+    int ix1 = round(*px1-map_offset_x);
+    int iy0 = STREET_LEVEL_Y + (int)round(y0+z0);
+    int iy1 = STREET_LEVEL_Y + (int)round(y0+*pz1);
+    draw_setup_quad2(k, ix0, iy0, ix1, iy1, 16, 4);
+}
+
 void opm_projectile(int p, float dt)
 {
     int k=32*p+16;
@@ -465,61 +502,8 @@ void opm_projectile(int p, float dt)
     float *pz2 = &quads[k+1].z;
 
     dt += 0.1;
-    float dx = x0 - *px1;
-    float dz = z0 - *pz1;
-    *pz1 += gravity * dt;
-    float mag_squared = sqr(dx) + sqr(dz);
-    if (mag_squared > CAPE_LENGTH*CAPE_LENGTH)
-    {
-        if (fabs(dx) < 0.25 && fabs(fabs(dz) - CAPE_LENGTH) < 0.25)
-            *pz1 -= gravity * dt;
-        else if (mag_squared > (CAPE_LENGTH+4.0f)*(CAPE_LENGTH+4.0f))
-        {
-            float mag = sqrt(mag_squared);
-            float norm = (CAPE_LENGTH*dt + 0.25f*mag)/(0.25f+dt)/mag;
-            *px1 = x0 - dx*norm;
-            *pz1 = z0 - dz*norm;
-        }
-        else
-        {
-            *px1 += 0.1*dx*dt;
-            *pz1 += 0.1*dz*dt;
-        }
-    }
-
-    int ix0 = round(x0-map_offset_x);
-    int ix1 = round(*px1-map_offset_x);
-    int iy0 = STREET_LEVEL_Y + (int)round(y0+z0);
-    int iy1 = STREET_LEVEL_Y + (int)round(y0+*pz1);
-    draw_setup_quad2(k, ix0, iy0, ix1, iy1, 16, 4);
-   
-    // needs refactoring, this is mostly a duplicate of the above:
-    *pz2 += gravity * dt;
-    dx = *px1 - *px2;
-    dz = *pz1 - *pz2;
-    mag_squared = sqr(dx) + sqr(dz);
-    if (mag_squared > CAPE_LENGTH*CAPE_LENGTH)
-    {
-        if (fabs(dx) < 0.75 && fabs(fabs(dz) - CAPE_LENGTH) < 0.75)
-            *pz2 -= gravity * dt;
-        else if (mag_squared > (CAPE_LENGTH+4.0f)*(CAPE_LENGTH+4.0f))
-        {
-            float mag = sqrt(mag_squared);
-            float norm = (CAPE_LENGTH*dt + 0.25f*mag)/(0.25f+dt)/mag;
-            *px2 = *px1 - dx*norm;
-            *pz2 = *pz1 - dz*norm;
-        }
-        else
-        {
-            *px2 += 0.1*dx*dt;
-            *pz2 += 0.1*dz*dt;
-        }
-        // should have a back effect on image point 1, ignoring for now
-    }
-    
-    ix0 = round(*px2-map_offset_x);
-    iy0 = STREET_LEVEL_Y + (int)round(y0+*pz2);
-    draw_setup_quad2(k+1, ix0, iy0, ix1, iy1, 16, 4);
+    opm_cape(k, x0, y0, z0, px1, pz1, dt);
+    opm_cape(k+1, *px1, y0, *pz1, px2, pz2, dt);
 }
 
 void opm_line(int p)
