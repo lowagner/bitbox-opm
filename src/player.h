@@ -45,3 +45,9 @@ void player_enable(int player1, int player2);
 void player_init();
 void player_start_level();
 void switch_player(int p, int character);
+
+#define ALLOW_TURN(p) \
+        if (GAMEPAD_PRESSED(p, right)) \
+            next_flipped = 0; \
+        else if (GAMEPAD_PRESSED(p, left)) \
+            next_flipped = ANIM_FACE_LEFT

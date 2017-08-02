@@ -213,13 +213,6 @@ void opm_ground(int p, float dt)
         }
         else
         {
-            if (next_flipped)
-            {
-                if (GAMEPAD_PRESSED(p, right))
-                    next_flipped = 0;
-            }
-            else if (GAMEPAD_PRESSED(p, left))
-                next_flipped = ANIM_FACE_LEFT;
             players[p].punch_charge += 0.5 + dt;
             if (players[p].punch_charge > 256)
             {
@@ -232,6 +225,7 @@ void opm_ground(int p, float dt)
     else if (players[p].punch_charge)
     {
         punch_now:
+        ALLOW_TURN(p);
         next_frame = ((next_frame%4)/2)*2;
         animation_interrupt(p, (ANIM_PUNCH_R_1 + next_frame) | next_flipped);
         frame_rate = 256*players[p].punch_charge;
@@ -420,13 +414,74 @@ void opm_air(int p, float dt)
     if (opm_run_charge(p, dt) && !GAMEPAD_PRESSED(p, dpad))
         physics_slow_time(players[p].run_charge);
 
+    int from_frame = ANIM_FROM(p);
+    //int from_flipped = from_frame & ANIM_FACE_LEFT;
+    from_frame &= ~ANIM_FACE_LEFT;
     int to_frame = ANIM_TO(p);
     int to_flipped = to_frame & ANIM_FACE_LEFT;
     to_frame &= ~ANIM_FACE_LEFT;
-    if (to_frame/2 == ANIM_FLY_0/2)
-        animation_tween(p, dt, 0.1, ANIM_FLY_0 | (1-(to_frame&1)) | to_flipped);
-    else
-        animation_tween(p, dt, 0.1, ANIM_FLY_0 | to_flipped);
+    int next_flipped = to_flipped;
+    int next_frame = ANIM_FLY_0 | (1-(to_frame&1));
+    
+    static float frame_rate = 0.1;
+    if (to_frame/4 != ANIM_PUNCH_R_0/4 || to_frame % 2 == 0)
+        frame_rate = opm_frame_rates[to_frame];
+    
+    if (GAMEPAD_PRESSED(p, B))
+    {
+        if (players[p].punch_charge == 0)
+        {
+            players[p].punch_charge += 0.5 + dt;
+            animation_interrupt(p, (ANIM_PUNCH_R_0 + 2 - ((from_frame%4)/2)*2) | next_flipped);
+            return;
+        }
+        players[p].punch_charge += 0.5 + dt;
+        if (players[p].punch_charge > 256)
+        {
+            players[p].punch_charge = 256;
+            goto air_punch_now;
+        }
+        next_frame = to_frame;
+    }
+    else if (players[p].punch_charge)
+    {
+        air_punch_now:
+        ALLOW_TURN(p);
+        next_frame = ((next_frame%4)/2)*2;
+        animation_interrupt(p, (ANIM_PUNCH_R_1 + next_frame) | next_flipped);
+        frame_rate = 256*players[p].punch_charge;
+        players[p].punch_charge = 0;
+        next_frame = ANIM_PUNCH_R_0 + next_frame;
+    }
+    else if (GAMEPAD_PRESSED(p, A))
+    {
+        if (players[p].kick_charge == 0)
+        {
+            players[p].kick_charge += 0.5 + dt;
+            animation_interrupt(p, (ANIM_KICK_R_0 + 2 - ((from_frame%4)/2)*2) | next_flipped);
+            return;
+        }
+        players[p].kick_charge += 0.5 + dt;
+        if (players[p].kick_charge > 256)
+        {
+            players[p].kick_charge = 256;
+            goto air_kick_now;
+        }
+        next_frame = to_frame;
+    }
+    else if (players[p].kick_charge)
+    {
+        air_kick_now:
+        ALLOW_TURN(p);
+        next_frame = ((next_frame%4)/2)*2;
+        animation_interrupt(p, (ANIM_KICK_R_1 + next_frame)|next_flipped);
+        frame_rate = 8*players[p].kick_charge;
+        players[p].kick_charge = 0;
+        next_frame = ANIM_KICK_R_0 + next_frame;
+    }
+    else ALLOW_TURN(p);
+
+    animation_tween(p, dt, frame_rate/dt,  next_frame | next_flipped);
 }
 
 static inline void opm_punch_wind(int k, float dt)
