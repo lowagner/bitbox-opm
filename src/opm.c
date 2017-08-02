@@ -462,7 +462,7 @@ void opm_cape(int k, float x0, float y0, float z0, float *px1, float *pz1, float
         {
             // cape is too stretched, renormalize the vector and pull it in (gradually):
             float mag = sqrt(mag_squared);
-            float norm = (CAPE_LENGTH*dt + 0.25f*mag)/(0.25f+dt)/mag;
+            float norm = (CAPE_LENGTH*dt + 0.0625f*mag)/(0.0625f+dt)/mag;
             *px1 = x0 + dx*norm;
             *pz1 = z0 + dz*norm;
         }
