@@ -1,8 +1,4 @@
-#define OPM_PHASE 
-
 #define CAPE_LENGTH 15.0f
-
-const int opm_height=30, opm_half_width=5;
 
 void opm_start_level(int p)
 {
@@ -25,23 +21,6 @@ void opm_start_level(int p)
     draw_add_projectile(k, k+1);
 }
 
-static inline int opm_run_charge(int p, float dt)
-{
-    if (gamepad_PRESSED(p, Y))
-    {
-        if (players[p].run_charge < 256)
-            players[p].run_charge += 0.5 + 0.5*dt;
-        else
-            players[p].run_charge = 256;
-        return 1;
-    }
-    else
-    {
-        players[p].run_charge -= 0.5 * players[p].run_charge * (0.5*dt + 0.5);
-        return 0;
-    }
-}
-    
 static const uint8_t opm_next_frames[ANIM_COUNT] = {
     [ANIM_IDLE_R]=ANIM_IDLE_L,
     [ANIM_IDLE_L]=ANIM_IDLE_R,
@@ -112,6 +91,23 @@ static const float opm_frame_rates[ANIM_COUNT] = {
     [ANIM_BAD_HURT]=0.5,
 };
 
+static inline int opm_run_charge(int p, float dt)
+{
+    if (gamepad_PRESSED(p, Y))
+    {
+        if (players[p].run_charge < 256)
+            players[p].run_charge += 0.5 + 0.5*dt;
+        else
+            players[p].run_charge = 256;
+        return 1;
+    }
+    else
+    {
+        players[p].run_charge -= 0.5 * players[p].run_charge * (0.5*dt + 0.5);
+        return 0;
+    }
+}
+    
 void opm_ground(int p, float dt)
 {
     int from_frame = ANIM_FROM(p);
@@ -516,18 +512,13 @@ static inline void opm_punch_wind(int k, float dt)
     }
 }
 
-float sqr(float x)
-{
-    return x*x;
-}
-
 void opm_cape(int k, float x0, float y0, float z0, float *px1, float *pz1, float dt)
 {
     // simulate gravity on cape:
     *pz1 += gravity * dt;
     float dx = *px1 - x0;
     float dz = *pz1 - z0;
-    float mag_squared = sqr(dx) + sqr(dz);
+    float mag_squared = dx*dx + dz*dz;
     if (mag_squared > CAPE_LENGTH*CAPE_LENGTH)
     {
         if (fabs(dx) < 0.75 && dz > 0 && fabs(dz - CAPE_LENGTH) < 0.75)
