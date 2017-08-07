@@ -1,8 +1,7 @@
 #pragma once
 #include <stdint.h>
 #include "animation.h"
-
-#define MAX_PLAYERS 6
+#include "../config.h"
 
 struct player
 {
@@ -47,7 +46,7 @@ void player_start_level();
 void switch_player(int p, int character);
 
 #define ALLOW_TURN(p) \
-        if (GAMEPAD_PRESSED(p, right)) \
+        if (gamepad_PRESSED(p, right)) \
             next_flipped = 0; \
-        else if (GAMEPAD_PRESSED(p, left)) \
+        else if (gamepad_PRESSED(p, left)) \
             next_flipped = ANIM_FACE_LEFT

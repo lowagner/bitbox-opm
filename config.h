@@ -1,5 +1,7 @@
 #pragma once
 
+#define MAX_PLAYERS 6 // 8 is the theoretical max based on drawing quads
+
 #define MAX_PHYSICS_WAIT 256
 
 #define STREET_LEVEL_Y (SCREEN_H/2+10)

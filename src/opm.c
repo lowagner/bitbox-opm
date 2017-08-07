@@ -27,7 +27,7 @@ void opm_start_level(int p)
 
 static inline int opm_run_charge(int p, float dt)
 {
-    if (GAMEPAD_PRESSED(p, Y))
+    if (gamepad_PRESSED(p, Y))
     {
         if (players[p].run_charge < 256)
             players[p].run_charge += 0.5 + 0.5*dt;
@@ -132,7 +132,7 @@ void opm_ground(int p, float dt)
     int slow_down_time = opm_run_charge(p, dt);
     if (vga_frame % 64 == 0)
         message("run %f at vx=%f\n", players[p].run_charge, players[p].vx);
-    if (GAMEPAD_PRESSED(p, L))
+    if (gamepad_PRESSED(p, L))
     {
         if (players[p].jump_charge == 0)
             animation_interrupt(p, ANIM_CROUCH_R | next_flipped);
@@ -166,18 +166,10 @@ void opm_ground(int p, float dt)
     players[p].vx -= 0.5 * players[p].vx * dt;
     players[p].vy -= 0.5 * players[p].vy * dt;
     
-    if (GAMEPAD_PRESSED(p, B))
+    if (gamepad_PRESSED(p, B))
     {
         players[p].jump_charge = 0;
-        if (from_frame/2 == ANIM_USER_R/2)
-            goto after_movement;
-        else if (from_frame/2 == ANIM_GUARD_R/2)
-        {
-            next_frame = ANIM_USER_R + from_frame%2;
-            animation_interrupt(p, next_frame | next_flipped);
-            frame_rate = 5.0;
-        }
-        else if (players[p].punch_charge == 0)
+        if (players[p].punch_charge == 0)
         {
             if (dt != 1 && from_frame/4 == ANIM_PUNCH_R_0/4)
             {
@@ -267,10 +259,18 @@ void opm_ground(int p, float dt)
         players[p].punch_charge = 0;
         next_frame = ANIM_PUNCH_R_0 + next_frame;
     }
-    else if (GAMEPAD_PRESSED(p, A))
+    else if (gamepad_PRESSED(p, A))
     {
         players[p].jump_charge = 0;
-        if (players[p].kick_charge == 0)
+        if (from_frame/2 == ANIM_USER_R/2)
+            goto after_movement;
+        else if (from_frame/2 == ANIM_GUARD_R/2)
+        {
+            next_frame = ANIM_USER_R + from_frame%2;
+            animation_interrupt(p, next_frame | next_flipped);
+            frame_rate = 5.0;
+        }
+        else if (players[p].kick_charge == 0)
         {
             players[p].kick_charge += 0.5 + dt;
             animation_interrupt(p, (ANIM_KICK_R_0 + 1 - (from_frame&1)) | next_flipped);
@@ -296,20 +296,20 @@ void opm_ground(int p, float dt)
         players[p].kick_charge = 0;
         next_frame = ANIM_KICK_R_0 + next_frame;
     }
-    else if (GAMEPAD_PRESSED(p, X))
+    else if (gamepad_PRESSED(p, X))
     {
         frame_rate = 0.5;
         next_frame = ANIM_GUARD_R + (to_frame%2);
         ALLOW_TURN(p);
     }
-    else if (GAMEPAD_PRESSED(p, right))
+    else if (gamepad_PRESSED(p, right))
     {
         players[p].vx += 1 + 0.05*players[p].run_charge;
         if (players[p].vx > 0)
             next_flipped = 0;
         if (vga_frame % 64 == 0)
             message("vx is %f\n", players[p].vx);
-        if (GAMEPAD_PRESSED(p, L))
+        if (gamepad_PRESSED(p, L))
         {
             if (from_frame != ANIM_CROUCH_L)
                 next_frame = ANIM_CROUCH_L;
@@ -334,13 +334,13 @@ void opm_ground(int p, float dt)
         }
         slow_down_time = 0;
     }
-    else if (GAMEPAD_PRESSED(p, left))
+    else if (gamepad_PRESSED(p, left))
     {
         players[p].vx -= 1 + 0.05*players[p].run_charge;
         if (players[p].vx < 0)
             next_flipped = ANIM_FACE_LEFT;
         slow_down_time = 0;
-        if (GAMEPAD_PRESSED(p, L))
+        if (gamepad_PRESSED(p, L))
         {
             if (from_frame != ANIM_CROUCH_L)
                 next_frame = ANIM_CROUCH_L;
@@ -366,11 +366,11 @@ void opm_ground(int p, float dt)
         }
         goto after_movement;
     }
-    if (GAMEPAD_PRESSED(p, up))
+    if (gamepad_PRESSED(p, up))
     {
         players[p].vy -= 1 + 0.03*players[p].run_charge;
         slow_down_time = 0;
-        if (GAMEPAD_PRESSED(p, L))
+        if (gamepad_PRESSED(p, L))
         {
             if (from_frame != ANIM_CROUCH_L)
                 next_frame = ANIM_CROUCH_L;
@@ -387,11 +387,11 @@ void opm_ground(int p, float dt)
                 next_frame = ANIM_WALK_R_0 + next_frame%4;
         }
     }
-    else if (GAMEPAD_PRESSED(p, down))
+    else if (gamepad_PRESSED(p, down))
     {
         players[p].vy += 1 + 0.03*players[p].run_charge;
         slow_down_time = 0;
-        if (GAMEPAD_PRESSED(p, L))
+        if (gamepad_PRESSED(p, L))
         {
             if (from_frame != ANIM_CROUCH_L)
                 next_frame = ANIM_CROUCH_L;
@@ -425,7 +425,7 @@ void opm_air(int p, float dt)
 {
     if (vga_frame % 32 == 0)
         message("fly %f at vx=%f\n", players[p].run_charge, players[p].vx);
-    if (opm_run_charge(p, dt) && !GAMEPAD_PRESSED(p, dpad))
+    if (opm_run_charge(p, dt) && !gamepad_PRESSED(p, dpad))
         physics_slow_time(players[p].run_charge);
 
     int from_frame = ANIM_FROM(p);
@@ -441,7 +441,7 @@ void opm_air(int p, float dt)
     if (to_frame/4 != ANIM_PUNCH_R_0/4 || to_frame % 2 == 0)
         frame_rate = opm_frame_rates[to_frame];
     
-    if (GAMEPAD_PRESSED(p, B))
+    if (gamepad_PRESSED(p, B))
     {
         if (players[p].punch_charge == 0)
         {
@@ -467,7 +467,7 @@ void opm_air(int p, float dt)
         players[p].punch_charge = 0;
         next_frame = ANIM_PUNCH_R_0 + next_frame;
     }
-    else if (GAMEPAD_PRESSED(p, A))
+    else if (gamepad_PRESSED(p, A))
     {
         if (players[p].kick_charge == 0)
         {
@@ -493,7 +493,7 @@ void opm_air(int p, float dt)
         players[p].kick_charge = 0;
         next_frame = ANIM_KICK_R_0 + next_frame;
     }
-    else if (GAMEPAD_PRESSED(p, X))
+    else if (gamepad_PRESSED(p, X))
     {
         frame_rate = 0.5;
         next_frame = ANIM_GUARD_R + (to_frame%2);
@@ -582,22 +582,4 @@ void opm_projectile(int p, float dt)
     dt += 0.1;
     opm_cape(k, x0, y0, z0, px1, pz1, dt);
     opm_cape(k+1, *px1, y0, *pz1, px2, pz2, dt);
-}
-
-void opm_line(int p)
-{
-    if (vga_line + opm_height <= players[p].iy || vga_line > players[p].iy)
-    {
-        if (vga_line == 0 && players[p].iy < opm_height)
-            message("out of line: %d %d\n", vga_line, players[p].iy);
-        return;
-    }
-    uint16_t *dst = &draw_buffer[players[p].ix - opm_half_width];
-    if (dst < draw_buffer)
-        dst = draw_buffer;
-    uint16_t *dst_max = &draw_buffer[players[p].ix + opm_half_width];
-    if (dst_max >= draw_buffer + SCREEN_W)
-        dst_max = draw_buffer + SCREEN_W;
-    while (dst < dst_max)
-        *dst++ = RGB(255, 255, 0);
 }

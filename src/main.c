@@ -8,8 +8,9 @@
 #include "levels.h"
 #include "mugs.h"
 
-uint16_t new_gamepad[2] CCM_MEMORY;
-uint16_t old_gamepad[2] CCM_MEMORY;
+uint16_t gamepad_new[MAX_PLAYERS] CCM_MEMORY;
+uint16_t gamepad_AI[MAX_PLAYERS] CCM_MEMORY;
+uint16_t gamepad_old[MAX_PLAYERS] CCM_MEMORY;
 float map_offset_x CCM_MEMORY;
 int barrier_x CCM_MEMORY;
 Level level CCM_MEMORY;
@@ -50,10 +51,22 @@ void game_init()
 
 void game_frame()
 {
-    new_gamepad[0] = gamepad_buttons[0] & (~old_gamepad[0]);
-    new_gamepad[1] = gamepad_buttons[1] & (~old_gamepad[1]);
-    old_gamepad[0] = gamepad_buttons[0];
-    old_gamepad[1] = gamepad_buttons[1];
+    // update controllers, both for player and for AI
+    // what has been pressed that's new?
+    gamepad_new[0] = gamepad_buttons[0] & (~gamepad_old[0]);
+    gamepad_new[1] = gamepad_buttons[1] & (~gamepad_old[1]);
+    uint32_t *new = (uint32_t *)gamepad_new;
+    uint32_t *current = (uint32_t *)gamepad_AI;
+    for (int i=1; i<MAX_PLAYERS/2; ++i)
+        *++new = *++current;
+    
+    // update old controllers to what was current.
+    gamepad_old[0] = gamepad_buttons[0];
+    gamepad_old[1] = gamepad_buttons[1];
+    uint32_t *old = (uint32_t *)gamepad_old;
+    current = (uint32_t *)gamepad_AI;
+    for (int i=1; i<MAX_PLAYERS/2; ++i)
+        *++old = *++current;
 
     if (overlay_visible())
         overlay_frame();

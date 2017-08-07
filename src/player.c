@@ -190,7 +190,7 @@ void player_start_level()
 
         players[i].thing_grabbed = 0;
 
-        animation_reset(i, ANIM_IDLE_0, ANIM_IDLE_1);
+        animation_reset(i, ANIM_IDLE_R, ANIM_IDLE_L);
 
         players[i].punch_charge = 0;
         players[i].jump_charge = 0;

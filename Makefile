@@ -122,7 +122,6 @@ src/characters.h: Makefile $(CHARACTERS_C)
 	 echo "void $${c}_ground(int p, float dt);" >> $@; \
 	 echo "void $${c}_air(int p, float dt);" >> $@; \
 	 echo "void $${c}_projectile(int p, float dt);" >> $@; \
-	 echo "void $${c}_line(int p);" >> $@; \
 	 echo "extern const animation_frame frames_$${c}[ANIM_COUNT];" >> $@; \
 	 echo "extern const uint16_t colors_$${c}[16];" >> $@; \
 	done
@@ -155,17 +154,6 @@ src/switch_player.c: Makefile
 	 echo "		case CHARACTER_$$c:" >> $@; \
 	 echo "			$${c}_air(p, dt);" >> $@; \
 	 echo "			$${c}_projectile(p, dt);" >> $@; \
-	 echo "			break;" >> $@; \
-	done
-	@echo "	}" >> $@
-	@echo "}" >> $@
-	@echo "static inline void switch_player_line(int p)" >> $@
-	@echo "{" >> $@
-	@echo "	switch (players[p].character)" >> $@
-	@echo "	{" >> $@
-	@for c in $(CHARACTERS); do \
-	 echo "		case CHARACTER_$$c:" >> $@; \
-	 echo "			$${c}_line(p);" >> $@; \
 	 echo "			break;" >> $@; \
 	done
 	@echo "	}" >> $@

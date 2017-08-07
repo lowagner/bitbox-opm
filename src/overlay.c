@@ -168,21 +168,21 @@ void overlay_frame()
     char c = overlay_lines[overlay_index][overlay_lengths[overlay_index]];
     if (!c)
     {
-        if (new_gamepad[0] & OVERLAY_CLEAR_BUTTON)
+        if (gamepad_new[0] & OVERLAY_CLEAR_BUTTON)
         {
             if (overlay_fn)
                 overlay_fn();
             else
                 overlay_clear();
         }
-        else if (overlay_fn && GAMEPAD_PRESS(0, any))
+        else if (overlay_fn && gamepad_PRESS(0, any))
             overlay_fn();
 
         return;
     }
     else if (c == '\t')
     {
-        if (GAMEPAD_PRESS(0, any))
+        if (gamepad_PRESS(0, any))
         {
             overlay_blink = 0;
             overlay_advance_text();
@@ -193,7 +193,7 @@ void overlay_frame()
     }
     else if (c == '\n')
     {
-        if (GAMEPAD_PRESS(0, any))
+        if (gamepad_PRESS(0, any))
             overlay_blink = 0;
         else
         {
@@ -207,12 +207,12 @@ void overlay_frame()
         return;
     }
 
-    if (GAMEPAD_PRESSED(0, Y))
+    if (gamepad_PRESSED(0, Y))
     {
         if (vga_frame % 16)
             return;
     }
-    else if (GAMEPAD_PRESSED(0, any))
+    else if (gamepad_PRESSED(0, any))
     {
         if (vga_frame % 2)
             return;
