@@ -237,7 +237,6 @@ void henchman_ground(int p, float dt)
             frame_rate *= 0.5 + fabs(players[p].vx)/12.0;
             next_frame = ANIM_WALK_R_0 + next_frame%4;
         }
-        message("my frame is %d\n", next_frame);
     }
     else if (gamepad_PRESSED(p, left))
     {
@@ -315,3 +314,6 @@ void henchman_projectile(int p, float dt)
 {
 }
 
+void henchman_AI(int p, float dt)
+{
+}

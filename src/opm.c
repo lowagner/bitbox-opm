@@ -574,3 +574,7 @@ void opm_projectile(int p, float dt)
     opm_cape(k, x0, y0, z0, px1, pz1, dt);
     opm_cape(k+1, *px1, y0, *pz1, px2, pz2, dt);
 }
+
+void opm_AI(int p, float dt)
+{
+}

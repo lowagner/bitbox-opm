@@ -8,16 +8,12 @@
 
 #include "player.h"
 #include "characters.h"
-#include "ai.h"
 #include "draw.h"
 #include "physics.h"
 #include <math.h>
 
 struct player players[MAX_PLAYERS] CCM_MEMORY;
 unsigned int players_mask CCM_MEMORY;
-int player_indices_y[MAX_PLAYERS] CCM_MEMORY;
-int player_indices_draw[MAX_PLAYERS] CCM_MEMORY;
-int player_count CCM_MEMORY;
 
 void player_enable(int player1, int player2)
 {
@@ -28,8 +24,6 @@ void player_enable(int player1, int player2)
         players[0].health = 256;
         players[0].lives = 5;
         character_set(0, CHARACTER_opm);
-
-        draw_add_player(0);
     }
     if (player2)
     {
@@ -37,8 +31,6 @@ void player_enable(int player1, int player2)
         players[1].health = 256;
         players[1].lives = 5;
         character_set(1, CHARACTER_opm);
-        
-        draw_add_player(1);
     }
 }
 
@@ -115,7 +107,7 @@ inline void maybe_move_screen(struct player *ahead, struct player *behind, float
     }
 }
 
-void players_update(float dt)
+void player_frame(float dt)
 {
     if (players[0].health > 0)
     {
@@ -136,20 +128,19 @@ void players_update(float dt)
         individual_player_frame(1, dt);
         maybe_move_screen(&players[1], NULL, dt);
     }
-    for (int i=2; i<player_count; ++i)
+    for (int i=2; i<MAX_PLAYERS; ++i)
     {
-        individual_ai_frame(i, dt);
+        if (players[i].health <= 0)
+            continue;
+        switch_AI_frame(i, dt);
+        individual_player_frame(i, dt);
     }
-
-}
-
-void player_frame(float dt)
-{
-    players_update(dt);
 }
 
 void player_init()
 {
+    for (int i=0; i<MAX_PLAYERS; ++i)
+        players[i].health = 0;
     player_enable(1, 0);
 }
 
@@ -179,18 +170,34 @@ void player_steal_lives(int recipient, int giver)
 
 void player_start_level()
 {
-    for (int i=0; i<2; ++i)
+    message("starting level, player health %f / %f\n", players[0].health, players[1].health);
+    // steal lives if you've run out:
+    if ((players_mask & 1) && (players[0].health <= 0))
+        player_steal_lives(0, 1);
+    if ((players_mask & 2) && (players[1].health <= 0))
+        player_steal_lives(1, 0);
+
+    //players[2].health = 10;
+    //character_set(2, CHARACTER_henchman);
+    for (int i=0; i<MAX_PLAYERS; ++i)
     {
-        players[i].x = 0;
-        players[i].y = 32+64*i;
+        players[i].x = 32+64*i;
+        players[i].y = 32*i;
         players[i].z = 0;
+
+        if (players[i].health > 0)
+        {
+            animation_reset(i, ANIM_IDLE_R, ANIM_IDLE_L);
+            draw_add_player(i);
+        }
+        else
+            draw_remove_player(i);
+
         players[i].vx = 0;
         players[i].vy = 0;
         players[i].vz = 0;
 
         players[i].thing_grabbed = 0;
-
-        animation_reset(i, ANIM_IDLE_R, ANIM_IDLE_L);
 
         players[i].punch_charge = 0;
         players[i].jump_charge = 0;
@@ -198,18 +205,4 @@ void player_start_level()
 
         switch_player_start_level(i);
     }
-
-    // steal lives if you've run out:
-    if ((players_mask & 1) && (players[0].health <= 0))
-        player_steal_lives(0, 1);
-    if ((players_mask & 2) && (players[1].health <= 0))
-        player_steal_lives(1, 0);
-
-    // TODO: setup draw and y order indices:
-    for (int i=0; i<MAX_PLAYERS; ++i)
-    {
-        player_indices_y[i] = i;
-        player_indices_draw[i] = i;
-    }
-    player_count = 2;
 }

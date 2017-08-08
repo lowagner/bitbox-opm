@@ -252,6 +252,7 @@ void draw_line()
 
 void draw_remove_player(int p)
 {
+    message("removing player %d\n", p);
     int i = 0;
     while (1)
     {
@@ -279,6 +280,7 @@ void draw_remove_player(int p)
 
 void draw_add_player(int p)
 {
+    message("adding player %d\n", p);
     // player p must not already have been added.
     draw_add_projectile(32*p+1, 32*p+15);
 }

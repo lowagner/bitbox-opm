@@ -44,9 +44,9 @@ void game_init()
     font_init();
     physics_init();
     draw_init();
+    player_init();
     level = level_none;
     game_switch(level_rentbox);
-    player_init();
 }
 
 void game_frame()
