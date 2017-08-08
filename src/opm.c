@@ -324,7 +324,7 @@ void opm_ground(int p, float dt)
         else
         {
             if (dt == 1.0)
-                frame_rate *= players[p].vx/3.0;
+                frame_rate *= fabs(players[p].vx)/3.0;
             walk:
             next_frame = ANIM_WALK_R_0 + next_frame%4;
         }
@@ -348,7 +348,7 @@ void opm_ground(int p, float dt)
         else
             next_frame = ANIM_WALK_R_0 + next_frame%4;
     }
-    else if (!(gamepad_buttons[p] & (gamepad_up | gamepad_down)))
+    else if (!(gamepad_old[p] & (gamepad_up | gamepad_down)))
     {
         if (next_frame/4 == ANIM_WALK_R_0/4)
         {
@@ -375,7 +375,7 @@ void opm_ground(int p, float dt)
             else if (dt == 1.0)
                 frame_rate *= 10.0/2.0;
         }
-        else if (!(gamepad_buttons[p] & (gamepad_left | gamepad_right)))
+        else if (!(gamepad_old[p] & (gamepad_left | gamepad_right)))
         {
             if (fabs(players[p].vx) > 10.0 && dt == 1.0)
                 next_frame = ANIM_RUN_R_0 + next_frame%4;
@@ -396,7 +396,7 @@ void opm_ground(int p, float dt)
             else if (dt == 1.0)
                 frame_rate *= 10.0/2.0;
         }
-        else if (!(gamepad_buttons[p] & (gamepad_left | gamepad_right)))
+        else if (!(gamepad_old[p] & (gamepad_left | gamepad_right)))
         {
             if (fabs(players[p].vx) > 10.0 && dt == 1.0)
                 next_frame = ANIM_RUN_R_0 + next_frame%4;
