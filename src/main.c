@@ -22,6 +22,9 @@ void game_switch(Level new_level)
 {
     if (new_level == level)
         return;
+    
+    for (int i=2; i<MAX_PLAYERS; ++i)
+        gamepad_AI[i] = 0;
 
     day_phase = 0;
     level = new_level;

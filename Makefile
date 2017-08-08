@@ -208,3 +208,7 @@ bak:
 	cp *.h Makefile $$dir
 	cp src/*.c src/*.h $$dir/src
 	cp mugs/* $$dir/mugs
+
+
+g: $(NAME)_sdl
+	gdb $(NAME)_sdl

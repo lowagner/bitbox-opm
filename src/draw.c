@@ -139,7 +139,7 @@ void draw_frame(float dt)
             swap_draw_order_k_kminus1(k);
     }
    
-    check_draw_index = 0;
+    check_draw_index = 1;
     quads[0].next = 0;
     if (vga_frame % 32 == 0)
         message("draw count is %d\n", draw_count);

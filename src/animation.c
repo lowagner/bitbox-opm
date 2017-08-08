@@ -9,9 +9,11 @@ void animation_reset(int p, int start_frame, int next_frame)
 {
     players[p].animation.tween = 0;
     players[p].animation.frames[0] = ANIM_COUNT | (next_frame&128);
-    players[p].animation.frames[1] = start_frame;
-    players[p].animation.frames[2] = next_frame;
+    players[p].animation.frames[1] = ANIM_COUNT; // this forces _animation_copy_to below to do its job
+    players[p].animation.frames[2] = ANIM_COUNT;
     players[p].animation.mix_from_to = 0 | (1 << 2) | (2 << 4);
+    _animation_copy_to(p, 1, start_frame);
+    _animation_copy_to(p, 2, next_frame);
     _animation_reset(p);
 }
 

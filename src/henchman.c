@@ -292,9 +292,9 @@ void henchman_ground(int p, float dt)
         }
     }
 
-    if (vga_frame % 32 == 0) 
-        message("hello hench %d\n", p);
     after_movement:
+    if (vga_frame % 32 == 0) 
+        message("hello hench %f\n", frame_rate);
     animation_tween(p, dt, frame_rate, next_frame | next_flipped);
 }
 
