@@ -36,8 +36,8 @@ void physics_frame()
     player_frame(dt);
     draw_frame(dt);
 
-    if (vga_frame % 32 == 0)
-        message("delta %02d\n", physics_wait);
+    //if (vga_frame % 32 == 0)
+    //    message("delta %02d\n", physics_wait);
     if (physics_wait > 1)
         --physics_wait;
 }

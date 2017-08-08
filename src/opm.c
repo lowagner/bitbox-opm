@@ -126,8 +126,8 @@ void opm_ground(int p, float dt)
     //    message("to frame %d/from punching frame %d; at rate %f\n", to_frame, from_frame, frame_rate);
 
     int slow_down_time = opm_run_charge(p, dt);
-    if (vga_frame % 64 == 0)
-        message("run %f at vx=%f\n", players[p].run_charge, players[p].vx);
+    //if (vga_frame % 64 == 0)
+    //    message("run %f at vx=%f\n", players[p].run_charge, players[p].vx);
     if (gamepad_PRESSED(p, L))
     {
         if (players[p].jump_charge == 0)
@@ -147,7 +147,7 @@ void opm_ground(int p, float dt)
     else if (players[p].jump_charge)
     {
         jump_now:
-        message("jump %f\n", players[p].jump_charge);
+        //message("jump %f\n", players[p].jump_charge);
         players[p].vx *= 2.0;
         players[p].vy *= 2.0;
         players[p].vz = -players[p].jump_charge;
@@ -172,7 +172,7 @@ void opm_ground(int p, float dt)
                 to_frame = ANIM_PUNCH_R_1 + 1 - (from_frame&1);
                 animation_interrupt(p, to_frame | next_flipped);
                 animation_tween(p, dt, 5.0/dt, (to_frame & (~1)) | next_flipped);
-                message("consecutive normal punches to frame %d at rate %f\n", to_frame, 5.0/dt);
+                //message("consecutive normal punches to frame %d at rate %f\n", to_frame, 5.0/dt);
                 players[p].custom += 2;
                 if (players[p].custom >= 16 - 1)
                     players[p].custom = 4;
@@ -227,7 +227,7 @@ void opm_ground(int p, float dt)
         frame_rate = 256*players[p].punch_charge;
         if (players[p].punch_charge > 16)
         {
-            message("firing off a punch\n");
+            //message("firing off a punch\n");
             int k=32*p + 16;
             if (quads[k].draw_index)
             {
@@ -303,8 +303,8 @@ void opm_ground(int p, float dt)
         players[p].vx += 1 + 0.05*players[p].run_charge;
         if (players[p].vx > 0)
             next_flipped = 0;
-        if (vga_frame % 64 == 0)
-            message("vx is %f\n", players[p].vx);
+        //if (vga_frame % 64 == 0)
+        //    message("vx is %f\n", players[p].vx);
         if (gamepad_PRESSED(p, L))
         {
             if (from_frame != ANIM_CROUCH_L)
@@ -419,8 +419,8 @@ void opm_ground(int p, float dt)
 
 void opm_air(int p, float dt)
 {
-    if (vga_frame % 32 == 0)
-        message("fly %f at vx=%f\n", players[p].run_charge, players[p].vx);
+    //if (vga_frame % 32 == 0)
+    //    message("fly %f at vx=%f\n", players[p].run_charge, players[p].vx);
     if (opm_run_charge(p, dt) && !gamepad_PRESSED(p, dpad))
         physics_slow_time(players[p].run_charge);
 

@@ -23,6 +23,16 @@ void rentbox_init()
         "Time to rent a movie!\0\nMy nephews are coming to Z city.\n\nI think they like superhero shows.", 
         mug_opm_what, NULL //rentbox_init_chain
     );
+    for (int i=0; i<3; ++i)
+    {
+        players[i].x = 32+64*i;
+        players[i].y = 32*i;
+        players[i].z = 0;
+    }
+    players[2].health = 10;
+    character_set(2, CHARACTER_henchman);
+    for (int i=3; i<MAX_PLAYERS; ++i)
+        players[i].health = 0;
 }
 
 void rentbox_buildings()

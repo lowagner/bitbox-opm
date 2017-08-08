@@ -90,7 +90,11 @@ void henchman_ground(int p, float dt)
         frame_rate = henchman_frame_rates[to_frame];
 
     if (gamepad_PRESSED(p, Y))
+    {
         players[p].run_charge += dt;
+        if (players[p].run_charge > 64)
+            players[p].run_charge = 64;
+    }
     else
         players[p].run_charge -= 0.5*players[p].run_charge * dt;
 
@@ -288,6 +292,8 @@ void henchman_ground(int p, float dt)
         }
     }
 
+    if (vga_frame % 32 == 0) 
+        message("hello hench %d\n", p);
     after_movement:
     animation_tween(p, dt, frame_rate, next_frame | next_flipped);
 }

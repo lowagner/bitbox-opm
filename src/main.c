@@ -25,7 +25,6 @@ void game_switch(Level new_level)
 
     day_phase = 0;
     level = new_level;
-    player_start_level();
     switch (new_level)
     {
         case level_rentbox:
@@ -34,6 +33,7 @@ void game_switch(Level new_level)
         default:
             break;
     }
+    player_start_level();
 }
 
 void game_init()

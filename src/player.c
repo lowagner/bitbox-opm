@@ -177,21 +177,16 @@ void player_start_level()
     if ((players_mask & 2) && (players[1].health <= 0))
         player_steal_lives(1, 0);
 
-    //players[2].health = 10;
-    //character_set(2, CHARACTER_henchman);
     for (int i=0; i<MAX_PLAYERS; ++i)
     {
-        players[i].x = 32+64*i;
-        players[i].y = 32*i;
-        players[i].z = 0;
-
-        if (players[i].health > 0)
+        if (players[i].health <= 0)
         {
-            animation_reset(i, ANIM_IDLE_R, ANIM_IDLE_L);
-            draw_add_player(i);
-        }
-        else
             draw_remove_player(i);
+            continue;
+        }
+
+        animation_reset(i, ANIM_IDLE_R, ANIM_IDLE_L);
+        draw_add_player(i);
 
         players[i].vx = 0;
         players[i].vy = 0;
