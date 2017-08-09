@@ -20,3 +20,7 @@ extern int pause;
 extern int continues;
 
 typedef void fn(void);
+inline float sqr(float x)
+{
+    return x*x;
+}

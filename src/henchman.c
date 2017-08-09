@@ -231,7 +231,7 @@ void henchman_ground(int p, float dt)
     }
     else if (gamepad_PRESSED(p, right))
     {
-        players[p].vx += 0.5 + 0.04*players[p].run_charge;
+        players[p].vx += (0.5 + 0.04*players[p].run_charge)*dt;
         if (players[p].vx > 0)
             next_flipped = 0;
         if (players[p].vx > 6.0)
@@ -244,7 +244,7 @@ void henchman_ground(int p, float dt)
     }
     else if (gamepad_PRESSED(p, left))
     {
-        players[p].vx -= 0.5 + 0.04*players[p].run_charge;
+        players[p].vx -= (0.5 + 0.04*players[p].run_charge)*dt;
         if (players[p].vx < 0)
             next_flipped = ANIM_FACE_LEFT;
         if (players[p].vx < -6.0)
@@ -271,7 +271,7 @@ void henchman_ground(int p, float dt)
     }
     if (gamepad_PRESSED(p, up))
     {
-        players[p].vy -= 0.5 + 0.03*players[p].run_charge;
+        players[p].vy -= (0.5 + 0.03*players[p].run_charge)*dt;
         if (!(gamepad_old[p] & (gamepad_left | gamepad_right)))
         {
             if (fabs(players[p].vx) > 6.0)
@@ -282,7 +282,7 @@ void henchman_ground(int p, float dt)
     }
     else if (gamepad_PRESSED(p, down))
     {
-        players[p].vy += 0.5 + 0.03*players[p].run_charge;
+        players[p].vy += (0.5 + 0.03*players[p].run_charge)*dt;
         if (!(gamepad_old[p] & (gamepad_left | gamepad_right)))
         {
             if (fabs(players[p].vx) > 6.0)
@@ -293,8 +293,6 @@ void henchman_ground(int p, float dt)
     }
 
     after_movement:
-    if (vga_frame % 32 == 0) 
-        message("hello hench %f\n", frame_rate);
     animation_tween(p, dt, frame_rate, next_frame | next_flipped);
 }
 
@@ -322,4 +320,95 @@ void henchman_projectile(int p, float dt)
 
 void henchman_AI(int p, float dt)
 {
+    players[p].AI.reaction += dt;
+    switch (players[p].AI.action)
+    {
+        case Wandering:
+            if (players[p].AI.reaction > 8)
+            {
+                players[p].AI.reaction = 0;
+                players[p].AI.action = rand()%Closing;
+                return;
+            }
+            if (rand()&1)
+                players[p].AI.direction = (players[p].AI.direction+1)%8;
+            else
+                players[p].AI.direction = (players[p].AI.direction+7)%8;
+            AI_set_direction(p);
+            return;
+        case Thinking:
+            gamepad_AI[p] = 0;
+            if (players[p].AI.reaction > 2)
+            {
+                players[p].AI.reaction = 0;
+                players[p].AI.action = Looking;
+                return;
+            }
+            return;
+        case Looking:
+            if (players[p].AI.reaction < 4)
+                return;
+            players[p].AI.reaction = 0;
+            if (players[0].health > 0)
+            {
+                if (players[1].health > 0)
+                    players[p].AI.target_p = player_distance2(p, 0) < player_distance2(p, 1) ? 0 : 1;
+                else
+                    players[p].AI.target_p = 0;
+            }
+            else if (players[1].health > 0)
+                players[p].AI.target_p = 1;
+            else
+            {
+                players[p].AI.action = Wandering;
+                return;
+            }
+            players[p].AI.action = Closing;
+            AI_move_to_player(p, players[p].AI.target_p, 6.0);
+            return;
+        case Closing:
+            if (players[p].AI.reaction > 4)
+            {
+                int tp = players[p].AI.target_p;
+                players[p].AI.reaction = 0;
+                if (player_distance2(p, tp) > 64.0)
+                    AI_move_to_player(p, tp, 6.0);
+                else
+                    players[p].AI.action = DecidingAttack;
+                return;
+            }
+            return;
+        case DecidingAttack:
+            if (players[p].AI.reaction > 2)
+            {
+                players[p].AI.reaction = 0;
+                players[p].AI.action = Attacking;
+                return;
+            }
+            return;
+        case Attacking:
+            if (players[p].AI.reaction > 3)
+            {
+                players[p].AI.reaction = 0;
+                players[p].AI.action = Looking;
+                return;
+            }
+            return;
+        case Circling:
+            if (players[p].AI.reaction > 8)
+            {
+                players[p].AI.reaction = 0;
+                players[p].AI.action = Closing;
+                return;
+            }
+            return;
+        case Special:
+            if (players[p].AI.reaction > 2)
+            {
+                players[p].AI.reaction = 0;
+                players[p].AI.action = Looking;
+                return;
+            }
+            return;
+    }
 }

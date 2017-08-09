@@ -3,6 +3,32 @@
 #include "animation.h"
 #include "../config.h"
 
+typedef enum
+{
+    Wandering=0,
+    Thinking,
+    Looking,
+    Closing,
+    DecidingAttack,
+    Attacking,
+    Circling,
+    Special
+}
+Action;
+
+typedef enum
+{
+    E=0,
+    NE,
+    N,
+    NW,
+    W,
+    SW,
+    S,
+    SE
+}
+Direction;
+
 struct player
 {
     float x, y, z;
@@ -19,6 +45,7 @@ struct player
     uint8_t index_draw;
 
     uint32_t custom;
+    float customf;
 
     float health;
 
@@ -33,6 +60,17 @@ struct player
 
     struct animation animation;
     const struct animation_frame *all_frames;
+
+    struct
+    {
+        float reaction;
+        int target_p;
+        Action action;
+        Direction direction;
+        int thought1;
+        int thought2;
+    }
+    AI;
 };
 
 extern struct player players[MAX_PLAYERS];
@@ -44,6 +82,10 @@ void player_enable(int player1, int player2);
 void player_init();
 void player_start_level();
 void switch_player(int p, int character);
+
+float player_distance2(int p1, int p2);
+void AI_set_direction(int p);
+void AI_move_to_player(int p, int target, float space);
 
 #define ALLOW_TURN(p) \
         if (gamepad_PRESSED(p, right)) \

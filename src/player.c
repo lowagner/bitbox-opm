@@ -1,11 +1,3 @@
-// TODO
-/*
-    have a current_frame, desired_next_frame,
-    split it up so that we can have more specialized character air/ground functions.
-
-*/
-
-
 #include "player.h"
 #include "characters.h"
 #include "draw.h"
@@ -200,4 +192,55 @@ void player_start_level()
 
         switch_player_start_level(i);
     }
+}
+
+float player_distance2(int p1, int p2)
+{
+    return sqr(players[p1].x-players[p2].x) + sqr(players[p1].y-players[p2].y) + sqr(players[p1].z-players[p2].z);
+}
+
+void AI_set_direction(int p)
+{
+    switch (players[p].AI.direction)
+    {
+        case E:
+            gamepad_AI[p] = gamepad_right;
+            break;
+        case NE:
+            gamepad_AI[p] = gamepad_right | gamepad_up;
+            break;
+        case N:
+            gamepad_AI[p] = gamepad_up;
+            break;
+        case NW:
+            gamepad_AI[p] = gamepad_left | gamepad_up;
+            break;
+        case W:
+            gamepad_AI[p] = gamepad_left;
+            break;
+        case SW:
+            gamepad_AI[p] = gamepad_left | gamepad_down;
+            break;
+        case S:
+            gamepad_AI[p] = gamepad_down;
+            break;
+        case SE:
+            gamepad_AI[p] = gamepad_right | gamepad_down;
+            break;
+    }
+}
+
+void AI_move_to_player(int p, int target, float space)
+{
+    gamepad_AI[p] = 0;
+    float delta = players[p].y - players[target].y;
+    if (delta < -space)
+        gamepad_AI[p] |= gamepad_down;
+    else if (delta > space)
+        gamepad_AI[p] |= gamepad_up;
+    delta = 0.25*(players[p].x - players[target].x);
+    if (delta < -space)
+        gamepad_AI[p] |= gamepad_right;
+    else if (delta > space)
+        gamepad_AI[p] |= gamepad_left;
 }
