@@ -412,3 +412,13 @@ void henchman_AI(int p, float dt)
             return;
     }
 }
+
+void henchman_collision_advantage(int k_self, int k_other)
+{
+    message("colliding advantage henchman %d from %d\n", k_self, k_other);
+}
+
+void henchman_collision_disadvantage(int k_self, int k_other)
+{
+    message("colliding disadvantage henchman %d from %d\n", k_self, k_other);
+}

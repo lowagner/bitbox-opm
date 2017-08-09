@@ -1,5 +1,6 @@
 #include "common.h"
 #include "draw.h"
+#include "player.h"
 #include <math.h>
 
 struct quad quads[256] CCM_MEMORY;
@@ -145,6 +146,44 @@ void draw_frame(float dt)
         message("draw count is %d\n", draw_count);
 }
 
+int quads_overlap(int k1, int k2)
+{
+    // return 1 if quads[k1] overlaps quads[k2], otherwise 0.
+    if
+    (
+        (quads[k1].x + quads[k1].width < quads[k2].x) ||
+        (quads[k2].x + quads[k2].width < quads[k1].x) ||
+        (quads[k1].z + quads[k1].height < quads[k2].z) ||
+        (quads[k2].z + quads[k2].height < quads[k1].z) ||
+        (fabs(quads[k1].y - quads[k2].y) > 0.25*(quads[k1].width + quads[k2].width))
+    )
+        return 0;
+    return 1;
+}
+
+void quads_contest(int k1, int k2)
+{
+    float v1_squared = sqr(quads[k1].vx);
+    float v2_squared = sqr(quads[k2].vx);
+    // could contest with vy, but that should be small
+    v1_squared += sqr(quads[k1].vy);
+    v2_squared += sqr(quads[k2].vy);
+    if (v1_squared < 2.0 && v2_squared < 2.0)
+    {
+        // TODO: take into account player stubbornness and push each other out of the way
+    }
+    else if (v1_squared > v2_squared)
+    {
+        switch_player_advantage(k1, k2);
+        switch_player_disadvantage(k2, k1);
+    }
+    else
+    {
+        switch_player_advantage(k2, k1);
+        switch_player_disadvantage(k1, k2);
+    }
+}
+
 void draw_line()
 {
     if (!draw_count) // none to draw...
@@ -168,12 +207,15 @@ void draw_line()
         }
         quads[previous].next = current;
         quads[current].next = next;
+        UNSET_QUAD_COLLIDED(current);
 
         ++check_draw_index;
     }
     // draw on-screen and currently visible (on this line) quads
-    uint8_t previous = 0;
-    uint8_t current = quads[0].next;
+    int previous = 0;
+    int current = quads[0].next;
+    uint16_t *start;
+    uint16_t *end;
     while (current)
     {
         int16_t final_iy = quads[current].iy + quads[current].height;
@@ -185,8 +227,22 @@ void draw_line()
             continue;
         }
         // otherwise...
-        uint16_t *start;
-        uint16_t *end;
+        // check collisions
+        if (QUAD_COLLIDED(current))
+            goto draw_quad;
+        int p = current/32;
+        int next = current;
+        while ((next = quads[next].next))
+        {
+            if (p == next/32 || QUAD_COLLIDED(next) || !quads_overlap(current, next))
+                continue;
+            SET_QUAD_COLLIDED(current);
+            SET_QUAD_COLLIDED(next);
+            quads_contest(current, next);
+            break;
+        }
+        // draw
+        draw_quad:
         if ((current % 16)/2)
         {
             // normal box for core/limbs, etc.
@@ -276,6 +332,14 @@ void draw_remove_player(int p)
         }
     }
     draw_count -= delta;    
+}
+
+void draw_explode_player(int p, float lifetime)
+{
+    message("exploding player %d\n", p);
+    int k = 32*p;
+    for (int delta=1; delta<32; ++delta)
+        quads[++k].lifetime = lifetime;
 }
 
 void draw_add_player(int p)

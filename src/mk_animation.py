@@ -173,9 +173,9 @@ with open("src/switch_animation.c", 'w') as f:
         f.write('\tnew_pos.z = players[p].z - mix_core->%s.dy;\n'%p);
         f.write('\tquads[k].width = mix_core->%s.width;\n'%p)
         f.write('\tquads[k].height = mix_core->%s.height;\n'%p)
-        f.write('\tquads[k].vx = (new_pos.x - quads[k].x)/delta + 0.5*rate*(to_core->%s.width - from_core->%s.width);\n'%(p,p))
-        f.write('\tquads[k].vy = (new_pos.y - quads[k].y)/delta;\n')
-        f.write('\tquads[k].vz = (new_pos.z - quads[k].z)/delta + 0.5*rate*(to_core->%s.height - from_core->%s.height);\n'%(p,p))
+        f.write('\tquads[k].vx = rate*((new_pos.x - quads[k].x)/delta + 0.5*(to_core->%s.width - from_core->%s.width));\n'%(p,p))
+        f.write('\tquads[k].vy = rate*(new_pos.y - quads[k].y)/delta;\n')
+        f.write('\tquads[k].vz = rate*((new_pos.z - quads[k].z)/delta + 0.5*(to_core->%s.height - from_core->%s.height));\n'%(p,p))
         f.write('\tquads[k].x = new_pos.x;\n')
         f.write('\tquads[k].y = new_pos.y;\n');
         f.write('\tquads[k].z = new_pos.z;\n');
