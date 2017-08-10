@@ -163,14 +163,32 @@ int quads_overlap(int k1, int k2)
 
 void quads_contest(int k1, int k2)
 {
-    float v1_squared = sqr(quads[k1].vx);
-    float v2_squared = sqr(quads[k2].vx);
+    // TODO: tweak/test this as necessary
+    int p1 = k1/32;
+    int p2 = k2/32;
+    float v1_squared = sqr(quads[k1].vx - players[p2].vx);
+    float v2_squared = sqr(quads[k2].vx - players[p1].vx);
     // could contest with vy, but that should be small
-    v1_squared += sqr(quads[k1].vy);
-    v2_squared += sqr(quads[k2].vy);
+    v1_squared += sqr(quads[k1].vz - players[p2].vz);
+    v2_squared += sqr(quads[k2].vz - players[p1].vz);
     if (v1_squared < 2.0 && v2_squared < 2.0)
     {
-        // TODO: take into account player stubbornness and push each other out of the way
+        // take into account player stubbornness and push each other out of the way
+        float delta = players[p2].x - players[p1].x;
+        float vx_delta, vz_delta;
+        if (fabs(delta) < 5)
+            vx_delta = quads[k2].vx - quads[k1].vx - 1.0f*delta;
+        else
+            vx_delta = quads[k2].vx - quads[k1].vx - 25.0f/delta;
+        delta = players[p2].z - players[p1].z;
+        if (fabs(delta) < 5)
+            vz_delta = quads[k2].vz - quads[k1].vz - 1.0f*delta;
+        else
+            vz_delta = quads[k2].vz - quads[k1].vz - 25.0f/delta;
+        players[p1].vx += players[p1].inverse_mass * vx_delta;
+        players[p1].vy += players[p1].inverse_mass * vz_delta;
+        players[p2].vx -= players[p2].inverse_mass * vx_delta;
+        players[p2].vy -= players[p2].inverse_mass * vz_delta;
     }
     else if (v1_squared > v2_squared)
     {

@@ -34,6 +34,8 @@ struct player
     float x, y, z;
     float vx, vy, vz;
     float max_vx;
+    
+    float inverse_mass;
 
     int ix, iy;
 

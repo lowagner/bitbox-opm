@@ -1,5 +1,7 @@
 void henchman_start_level(int p)
 {
+    players[p].inverse_mass = 0.25;
+
     players[p].vz = 0;
     players[p].vx = 5;
 }

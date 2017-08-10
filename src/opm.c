@@ -2,6 +2,8 @@
 
 void opm_start_level(int p)
 {
+    players[p].inverse_mass = 0;
+
     players[p].vz = -10;
     players[p].vx = 3;
     players[p].custom = 4;
