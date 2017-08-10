@@ -152,7 +152,7 @@ void opm_ground(int p, float dt)
         //message("jump %f\n", players[p].jump_charge);
         players[p].vx *= 2.0;
         players[p].vy *= 2.0;
-        players[p].vz = -players[p].jump_charge;
+        players[p].vz = -2.0 - players[p].jump_charge;
         players[p].jump_charge = 0;
         animation_interrupt(p, ANIM_FLY_R | next_flipped);
         frame_rate = opm_frame_rates[ANIM_FLY_R];
@@ -204,14 +204,14 @@ void opm_ground(int p, float dt)
             }
             else
             {
-                players[p].punch_charge += 0.5 + dt;
+                players[p].punch_charge += 1.0 + dt;
                 animation_interrupt(p, (ANIM_PUNCH_R_0 + 1 - (from_frame&1)) | next_flipped);
             }
             return;
         }
         else
         {
-            players[p].punch_charge += 0.5 + dt;
+            players[p].punch_charge += 1.0 + dt;
             if (players[p].punch_charge > 256)
             {
                 players[p].punch_charge = 256;
@@ -270,13 +270,13 @@ void opm_ground(int p, float dt)
         }
         else if (players[p].kick_charge == 0)
         {
-            players[p].kick_charge += 0.5 + dt;
+            players[p].kick_charge += 1.0 + dt;
             animation_interrupt(p, (ANIM_KICK_R_0 + 1 - (from_frame&1)) | next_flipped);
             return;
         }
         else
         {
-            players[p].kick_charge += 0.5 + dt;
+            players[p].kick_charge += 1.0 + dt;
             if (players[p].kick_charge > 256)
             {
                 players[p].kick_charge = 256;
@@ -443,11 +443,11 @@ void opm_air(int p, float dt)
     {
         if (players[p].punch_charge == 0)
         {
-            players[p].punch_charge += 0.5 + dt;
+            players[p].punch_charge += 1.0 + dt;
             animation_interrupt(p, (ANIM_PUNCH_R_0 + 1 - (from_frame&1)) | next_flipped);
             return;
         }
-        players[p].punch_charge += 0.5 + dt;
+        players[p].punch_charge += 1.0 + dt;
         if (players[p].punch_charge > 256)
         {
             players[p].punch_charge = 256;
@@ -469,11 +469,11 @@ void opm_air(int p, float dt)
     {
         if (players[p].kick_charge == 0)
         {
-            players[p].kick_charge += 0.5 + dt;
+            players[p].kick_charge += 1.0 + dt;
             animation_interrupt(p, (ANIM_KICK_R_0 + 1 - (from_frame&1)) | next_flipped);
             return;
         }
-        players[p].kick_charge += 0.5 + dt;
+        players[p].kick_charge += 1.0 + dt;
         if (players[p].kick_charge > 256)
         {
             players[p].kick_charge = 256;
