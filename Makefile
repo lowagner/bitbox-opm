@@ -124,8 +124,8 @@ src/characters.h: Makefile $(CHARACTERS_C)
 	 echo "void $${c}_air(int p, float dt);" >> $@; \
 	 echo "void $${c}_projectile(int p, float dt);" >> $@; \
 	 echo "void $${c}_AI(int p, float dt);" >> $@; \
-	 echo "void $${c}_collision_advantage(int k_self, int k_other);" >> $@; \
-	 echo "void $${c}_collision_disadvantage(int k_self, int k_other);" >> $@; \
+	 echo "void $${c}_collision_advantage(int k_self, int k_other, float v2);" >> $@; \
+	 echo "void $${c}_collision_disadvantage(int k_self, int k_other, float v2);" >> $@; \
 	 echo "extern const animation_frame frames_$${c}[ANIM_COUNT];" >> $@; \
 	 echo "extern const uint16_t colors_$${c}[16];" >> $@; \
 	done
@@ -184,24 +184,24 @@ src/switch_player.c: Makefile
 	done
 	@echo "	}" >> $@
 	@echo "}" >> $@
-	@echo "void switch_player_advantage(int k1, int k2)" >> $@
+	@echo "void switch_player_advantage(int k1, int k2, float v2)" >> $@
 	@echo "{" >> $@
 	@echo "	switch (players[k1/32].character)" >> $@
 	@echo "	{" >> $@
 	@for c in $(CHARACTERS); do \
 	 echo "		case CHARACTER_$$c:" >> $@; \
-	 echo "			$${c}_collision_advantage(k1, k2);" >> $@; \
+	 echo "			$${c}_collision_advantage(k1, k2, v2);" >> $@; \
 	 echo "			break;" >> $@; \
 	done
 	@echo "	}" >> $@
 	@echo "}" >> $@
-	@echo "void switch_player_disadvantage(int k1, int k2)" >> $@
+	@echo "void switch_player_disadvantage(int k1, int k2, float v2)" >> $@
 	@echo "{" >> $@
 	@echo "	switch (players[k1/32].character)" >> $@
 	@echo "	{" >> $@
 	@for c in $(CHARACTERS); do \
 	 echo "		case CHARACTER_$$c:" >> $@; \
-	 echo "			$${c}_collision_disadvantage(k1, k2);" >> $@; \
+	 echo "			$${c}_collision_disadvantage(k1, k2, v2);" >> $@; \
 	 echo "			break;" >> $@; \
 	done
 	@echo "	}" >> $@

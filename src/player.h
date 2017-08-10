@@ -85,8 +85,8 @@ void player_init();
 void player_start_level();
 void switch_player(int p, int character);
 
-void switch_player_advantage(int k1, int k2);
-void switch_player_disadvantage(int k1, int k2);
+void switch_player_advantage(int k1, int k2, float v2);
+void switch_player_disadvantage(int k1, int k2, float v2);
 
 float player_distance2(int p1, int p2);
 void AI_set_direction(int p);

@@ -581,12 +581,12 @@ void opm_AI(int p, float dt)
 {
 }
 
-void opm_collision_advantage(int k_self, int k_other)
+void opm_collision_advantage(int k_self, int k_other, float v2)
 {
     message("colliding advantage opm %d from %d\n", k_self, k_other);
 }
 
-void opm_collision_disadvantage(int k_self, int k_other)
+void opm_collision_disadvantage(int k_self, int k_other, float v2)
 {
     message("colliding disadvantage opm %d from %d\n", k_self, k_other);
 }
