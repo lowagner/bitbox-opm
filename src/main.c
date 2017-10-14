@@ -3,6 +3,7 @@
 #include "player.h"
 #include "draw.h"
 #include "physics.h"
+#include "collision.h"
 
 #include "font.h"
 #include "levels.h"
@@ -91,7 +92,7 @@ void game_snd_buffer(uint16_t* buffer, int len)
 void graph_line()
 {
     if (vga_odd)
-        return;
+        return collision_line();
     if (vga_line < OVERLAY_HEIGHT && overlay_visible())
         return overlay_line();
     switch (level)

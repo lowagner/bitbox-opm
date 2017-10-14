@@ -22,6 +22,7 @@ struct quad
     float vx, vy, vz;
 };
 
+extern int draw_count;
 extern struct quad quads[256];
 
 void draw_init();

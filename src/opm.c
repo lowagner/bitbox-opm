@@ -2,7 +2,7 @@
 
 void opm_start_level(int p)
 {
-    players[p].inverse_mass = 0;
+    players[p].inverse_mass = 0.0000000001;
 
     players[p].vz = -10;
     players[p].vx = 3;
@@ -173,7 +173,7 @@ void opm_ground(int p, float dt)
             {
                 to_frame = ANIM_PUNCH_R_1 + 1 - (from_frame&1);
                 animation_interrupt(p, to_frame | next_flipped);
-                animation_tween(p, dt, 5.0/dt, (to_frame & (~1)) | next_flipped);
+                animation_tween(p, dt, 1.0/dt, (to_frame & (~1)) | next_flipped);
                 //message("consecutive normal punches to frame %d at rate %f\n", to_frame, 5.0/dt);
                 players[p].custom += 2;
                 if (players[p].custom >= 16 - 1)
