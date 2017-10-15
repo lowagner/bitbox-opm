@@ -67,14 +67,13 @@ void collision_line()
     if (!draw_count) // none to draw...
         return;
     int16_t vga16 = (int16_t) vga_line;
-    
     int previous = 0;
     int current = quads[0].next;
     while (current)
     {
         int16_t final_iy = quads[current].iy + quads[current].height;
         // check if we are done drawing quad current:
-        if (vga16 > final_iy)
+        if (vga16 >= final_iy)
         {
             // delete the previous current from linked list:
             current = quads[previous].next = quads[current].next;
