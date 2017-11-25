@@ -206,6 +206,7 @@ void opm_ground(int p, float dt)
             {
                 players[p].punch_charge += 1.0 + dt;
                 animation_interrupt(p, (ANIM_PUNCH_R_0 + 1 - (from_frame&1)) | next_flipped);
+                message("punch start, interrupted anim\n");
             }
             return;
         }
@@ -256,6 +257,7 @@ void opm_ground(int p, float dt)
         punch_finalize:
         players[p].punch_charge = 0;
         next_frame = ANIM_PUNCH_R_0 + next_frame;
+        goto after_movement;
     }
     else if (gamepad_PRESSED(p, A))
     {
@@ -293,6 +295,7 @@ void opm_ground(int p, float dt)
         frame_rate = 8*players[p].kick_charge;
         players[p].kick_charge = 0;
         next_frame = ANIM_KICK_R_0 + next_frame;
+        goto after_movement;
     }
     else if (gamepad_PRESSED(p, X))
     {
@@ -300,9 +303,13 @@ void opm_ground(int p, float dt)
         next_frame = ANIM_GUARD_R + (to_frame%2);
         ALLOW_TURN(p);
     }
-    else if (gamepad_PRESSED(p, right))
+    
+    if (gamepad_PRESSED(p, right))
     {
-        players[p].vx += 1 + 0.05*players[p].run_charge;
+        if (gamepad_PRESSED(p, any_attack))
+            players[p].vx += 0.5 + 0.0001*players[p].run_charge;
+        else
+            players[p].vx += 1 + 0.05*players[p].run_charge;
         if (players[p].vx > 0)
             next_flipped = 0;
         //if (vga_frame % 64 == 0)
@@ -321,20 +328,33 @@ void opm_ground(int p, float dt)
             if (dt == 1.0)
                 next_frame = ANIM_RUN_R_0 + next_frame%4;
             else
-                goto walk;
+                goto walk_R;
         }
         else
         {
             if (dt == 1.0)
                 frame_rate *= fabs(players[p].vx)/3.0;
-            walk:
-            next_frame = ANIM_WALK_R_0 + next_frame%4;
+            walk_R:
+            if (gamepad_PRESSED(p, B))
+                next_frame = ANIM_PUNCH_R_0 + 1 - next_frame%2;
+            else if (gamepad_PRESSED(p, X))
+                next_frame = ANIM_GUARD_R + 1 - next_frame%2;
+            else if (gamepad_PRESSED(p, A))
+            {
+                next_frame = ANIM_KICK_R_0 + 1 - next_frame%2;
+                frame_rate = 0.1;
+            }
+            else
+                next_frame = ANIM_WALK_R_0 + next_frame%4;
         }
         slow_down_time = 0;
     }
     else if (gamepad_PRESSED(p, left))
     {
-        players[p].vx -= 1 + 0.05*players[p].run_charge;
+        if (gamepad_PRESSED(p, any_attack))
+            players[p].vx -= 0.5 + 0.0001*players[p].run_charge;
+        else
+            players[p].vx -= 1 + 0.05*players[p].run_charge;
         if (players[p].vx < 0)
             next_flipped = ANIM_FACE_LEFT;
         slow_down_time = 0;
@@ -347,8 +367,30 @@ void opm_ground(int p, float dt)
             else if (dt == 1.0)
                 frame_rate *= 10.0/2.0;
         }
+        else if (players[p].vx < -10.0)
+        {
+            if (dt == 1.0)
+                next_frame = ANIM_RUN_R_0 + next_frame%4;
+            else
+                goto walk_L;
+        }
         else
-            next_frame = ANIM_WALK_R_0 + next_frame%4;
+        {
+            if (dt == 1.0)
+                frame_rate *= fabs(players[p].vx)/3.0;
+            walk_L:
+            if (gamepad_PRESSED(p, B))
+                next_frame = ANIM_PUNCH_R_0 + 1 - next_frame%2;
+            else if (gamepad_PRESSED(p, X))
+                next_frame = ANIM_GUARD_R + 1 - next_frame%2;
+            else if (gamepad_PRESSED(p, A))
+            {
+                next_frame = ANIM_KICK_R_0 + 1 - next_frame%2;
+                frame_rate = 0.1;
+            }
+            else
+                next_frame = ANIM_WALK_R_0 + next_frame%4;
+        }
     }
     else if (!(gamepad_old[p] & (gamepad_up | gamepad_down)))
     {

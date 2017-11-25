@@ -47,10 +47,13 @@ void quads_contest(int k1, int k2)
     players[p2].vy -= players[p2].inverse_mass * vz_delta;
 
     float v_delta_squared = sqr(vx_delta)+sqr(vz_delta);
-    if (v1_squared < 2.0 && v2_squared < 2.0)
-    {
-    }
-    else if (v1_squared > v2_squared)
+    if (v1_squared < 4.0 && v2_squared < 4.0)
+        return;
+
+    if (fabs(quads[k1].vx) > 10 || fabs(quads[k2].vx) > 10)
+        message("got quads %f vs. %f\n", quads[k1].vx, quads[k2].vx);
+
+    if (v1_squared > v2_squared)
     {
         switch_player_advantage(k1, k2, v_delta_squared);
         switch_player_disadvantage(k2, k1, v_delta_squared);
