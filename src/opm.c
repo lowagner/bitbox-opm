@@ -147,6 +147,37 @@ void opm_set_next_frame(int p, float dt, int from_frame, int *p_next_frame, floa
             *p_next_frame = ANIM_WALK_R_0 + *p_next_frame%4;
     }
 }
+
+float opm_delta_vx(int p)
+{
+    float delta_vx;
+    if (gamepad_old[p] & (gamepad_up | gamepad_down))
+    {
+        float delta_vy;
+        if (gamepad_PRESSED(p, any_attack))
+        {
+            delta_vx = 0.5 + 0.0001*players[p].run_charge;
+            delta_vy = 0.5 + 0.02*players[p].run_charge;
+        }
+        else
+        {
+            delta_vx = 1 + 0.05*players[p].run_charge;
+            delta_vy = 1 + 0.03*players[p].run_charge;
+        }
+        if (gamepad_PRESSED(p, up))
+            players[p].vy -= delta_vy;
+        else
+            players[p].vy += delta_vy;
+    }
+    else // no up or down
+    {
+        if (gamepad_PRESSED(p, any_attack))
+            delta_vx = 0.5 + 0.0001*players[p].run_charge;
+        else
+            delta_vx = 1 + 0.05*players[p].run_charge;
+    }
+    return delta_vx;
+}
     
 void opm_ground(int p, float dt)
 {
@@ -344,10 +375,7 @@ void opm_ground(int p, float dt)
     
     if (gamepad_PRESSED(p, right))
     {
-        if (gamepad_PRESSED(p, any_attack))
-            players[p].vx += 0.5 + 0.0001*players[p].run_charge;
-        else
-            players[p].vx += 1 + 0.05*players[p].run_charge;
+        players[p].vx += opm_delta_vx(p);
         if (players[p].vx > 0)
             next_flipped = 0;
         slow_down_time = 0;
@@ -355,69 +383,35 @@ void opm_ground(int p, float dt)
     }
     else if (gamepad_PRESSED(p, left))
     {
-        if (gamepad_PRESSED(p, any_attack))
-            players[p].vx -= 0.5 + 0.0001*players[p].run_charge;
-        else
-            players[p].vx -= 1 + 0.05*players[p].run_charge;
+        players[p].vx -= opm_delta_vx(p);
         if (players[p].vx < 0)
             next_flipped = ANIM_FACE_LEFT;
         slow_down_time = 0;
         opm_set_next_frame(p, dt, from_frame, &next_frame, &frame_rate);
     }
-    else if (!(gamepad_old[p] & (gamepad_up | gamepad_down)))
+    else if (gamepad_old[p] & (gamepad_up | gamepad_down))
+    {
+        float delta_vy = (gamepad_PRESSED(p, up) ? -1 : 1) *
+            (
+                gamepad_PRESSED(p, any_attack) ? 
+                0.5 + 0.02*players[p].run_charge :
+                1 + 0.03*players[p].run_charge
+            );
+        players[p].vy += delta_vy;
+        slow_down_time = 0;
+        opm_set_next_frame(p, dt, from_frame, &next_frame, &frame_rate);
+    }
+    else 
     {
         if (next_frame/4 == ANIM_WALK_R_0/4)
         {
-            if (players[p].vx < 2.0)
+            if (fabs(players[p].vx)*dt < 1.0)
                 next_frame %= 2; 
         }
         else if (next_frame/4 == ANIM_RUN_R_0/4)
         {
-            if (players[p].vx < 10.0)
+            if (fabs(players[p].vx) < 10.0)
                 next_frame -= 4;
-        }
-        goto after_movement;
-    }
-    if (gamepad_PRESSED(p, up))
-    {
-        players[p].vy -= 1 + 0.03*players[p].run_charge;
-        slow_down_time = 0;
-        if (gamepad_PRESSED(p, L))
-        {
-            if (from_frame != ANIM_CROUCH_L)
-                next_frame = ANIM_CROUCH_L;
-            if (fabs(players[p].vy) < 10.0)
-                frame_rate *= fabs(players[p].vy)/2.0;
-            else if (dt == 1.0)
-                frame_rate *= 10.0/2.0;
-        }
-        else if (!(gamepad_old[p] & (gamepad_left | gamepad_right)))
-        {
-            if (fabs(players[p].vx) > 10.0 && dt == 1.0)
-                next_frame = ANIM_RUN_R_0 + next_frame%4;
-            else
-                next_frame = ANIM_WALK_R_0 + next_frame%4;
-        }
-    }
-    else if (gamepad_PRESSED(p, down))
-    {
-        players[p].vy += 1 + 0.03*players[p].run_charge;
-        slow_down_time = 0;
-        if (gamepad_PRESSED(p, L))
-        {
-            if (from_frame != ANIM_CROUCH_L)
-                next_frame = ANIM_CROUCH_L;
-            if (fabs(players[p].vy) < 10.0)
-                frame_rate *= fabs(players[p].vy)/2.0;
-            else if (dt == 1.0)
-                frame_rate *= 10.0/2.0;
-        }
-        else if (!(gamepad_old[p] & (gamepad_left | gamepad_right)))
-        {
-            if (fabs(players[p].vx) > 10.0 && dt == 1.0)
-                next_frame = ANIM_RUN_R_0 + next_frame%4;
-            else
-                next_frame = ANIM_WALK_R_0 + next_frame%4;
         }
     }
 
