@@ -109,6 +109,44 @@ static inline int opm_run_charge(int p, float dt)
         return 0;
     }
 }
+
+void opm_set_next_frame(int p, float dt, int from_frame, int *p_next_frame, float *p_frame_rate)
+{
+    float abs_vx = fabs(players[p].vx);
+    if (gamepad_PRESSED(p, L))
+    {
+        if (from_frame != ANIM_CROUCH_L)
+            *p_next_frame = ANIM_CROUCH_L;
+        if (abs_vx < 10.0)
+            *p_frame_rate *= abs_vx/2.0;
+        else if (dt == 1.0)
+            *p_frame_rate *= 10.0/2.0;
+    }
+    else if (abs_vx > 10.0)
+    {
+        if (dt == 1.0)
+            *p_next_frame = ANIM_RUN_R_0 + *p_next_frame%4;
+        else
+            goto walk;
+    }
+    else
+    {
+        if (dt == 1.0)
+            *p_frame_rate *= abs_vx/3.0;
+        walk:
+        if (gamepad_PRESSED(p, B))
+            *p_next_frame = ANIM_PUNCH_R_0 + 1 - *p_next_frame%2;
+        else if (gamepad_PRESSED(p, X))
+            *p_next_frame = ANIM_GUARD_R + 1 - *p_next_frame%2;
+        else if (gamepad_PRESSED(p, A))
+        {
+            *p_next_frame = ANIM_KICK_R_0 + 1 - *p_next_frame%2;
+            *p_frame_rate = 0.1;
+        }
+        else
+            *p_next_frame = ANIM_WALK_R_0 + *p_next_frame%4;
+    }
+}
     
 void opm_ground(int p, float dt)
 {
@@ -312,42 +350,8 @@ void opm_ground(int p, float dt)
             players[p].vx += 1 + 0.05*players[p].run_charge;
         if (players[p].vx > 0)
             next_flipped = 0;
-        //if (vga_frame % 64 == 0)
-        //    message("vx is %f\n", players[p].vx);
-        if (gamepad_PRESSED(p, L))
-        {
-            if (from_frame != ANIM_CROUCH_L)
-                next_frame = ANIM_CROUCH_L;
-            if (fabs(players[p].vx) < 10.0)
-                frame_rate *= fabs(players[p].vx)/2.0;
-            else if (dt == 1.0)
-                frame_rate *= 10.0/2.0;
-        }
-        else if (players[p].vx > 10.0)
-        {
-            if (dt == 1.0)
-                next_frame = ANIM_RUN_R_0 + next_frame%4;
-            else
-                goto walk_R;
-        }
-        else
-        {
-            if (dt == 1.0)
-                frame_rate *= fabs(players[p].vx)/3.0;
-            walk_R:
-            if (gamepad_PRESSED(p, B))
-                next_frame = ANIM_PUNCH_R_0 + 1 - next_frame%2;
-            else if (gamepad_PRESSED(p, X))
-                next_frame = ANIM_GUARD_R + 1 - next_frame%2;
-            else if (gamepad_PRESSED(p, A))
-            {
-                next_frame = ANIM_KICK_R_0 + 1 - next_frame%2;
-                frame_rate = 0.1;
-            }
-            else
-                next_frame = ANIM_WALK_R_0 + next_frame%4;
-        }
         slow_down_time = 0;
+        opm_set_next_frame(p, dt, from_frame, &next_frame, &frame_rate);
     }
     else if (gamepad_PRESSED(p, left))
     {
@@ -358,39 +362,7 @@ void opm_ground(int p, float dt)
         if (players[p].vx < 0)
             next_flipped = ANIM_FACE_LEFT;
         slow_down_time = 0;
-        if (gamepad_PRESSED(p, L))
-        {
-            if (from_frame != ANIM_CROUCH_L)
-                next_frame = ANIM_CROUCH_L;
-            if (fabs(players[p].vx) < 10.0)
-                frame_rate *= fabs(players[p].vx)/2.0;
-            else if (dt == 1.0)
-                frame_rate *= 10.0/2.0;
-        }
-        else if (players[p].vx < -10.0)
-        {
-            if (dt == 1.0)
-                next_frame = ANIM_RUN_R_0 + next_frame%4;
-            else
-                goto walk_L;
-        }
-        else
-        {
-            if (dt == 1.0)
-                frame_rate *= fabs(players[p].vx)/3.0;
-            walk_L:
-            if (gamepad_PRESSED(p, B))
-                next_frame = ANIM_PUNCH_R_0 + 1 - next_frame%2;
-            else if (gamepad_PRESSED(p, X))
-                next_frame = ANIM_GUARD_R + 1 - next_frame%2;
-            else if (gamepad_PRESSED(p, A))
-            {
-                next_frame = ANIM_KICK_R_0 + 1 - next_frame%2;
-                frame_rate = 0.1;
-            }
-            else
-                next_frame = ANIM_WALK_R_0 + next_frame%4;
-        }
+        opm_set_next_frame(p, dt, from_frame, &next_frame, &frame_rate);
     }
     else if (!(gamepad_old[p] & (gamepad_up | gamepad_down)))
     {
