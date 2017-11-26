@@ -157,6 +157,12 @@ void draw_line()
         uint8_t current = draw_order[check_draw_index];
         if (quads[current].iy > vga16) 
             break;
+        int16_t final_iy = quads[current].iy + quads[current].height;
+        if (final_iy < vga16)
+        {
+            ++check_draw_index;
+            continue;
+        }
         // add current to the (sorted!) linked list
         uint8_t previous = 0;
         uint8_t next = quads[0].next;
