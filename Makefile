@@ -1,5 +1,3 @@
-# DO NOT FORGET to define BITBOX environment variable ++ = RGB(255, 255, 0);
-
 USE_SDCARD = 1      # allow use of SD card for io
 #DEFINES += DEBUG_CHIPTUNE
 
@@ -32,7 +30,7 @@ CHARACTERS_C_WITHOUT_SRC=$(CHARACTERS:%=%.c)
 CHARACTERS_C=$(CHARACTERS:%=src/%.c)
 
 # see this file for options
-include $(BITBOX)/kernel/bitbox.mk
+include bitbox/kernel/bitbox.mk
 
 src/main.c: src/font.c src/levels.h src/characters.h src/switch_player.c src/switch_animation.c
 
