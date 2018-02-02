@@ -30,6 +30,7 @@ CHARACTERS_C_WITHOUT_SRC=$(CHARACTERS:%=%.c)
 CHARACTERS_C=$(CHARACTERS:%=src/%.c)
 
 # see this file for options
+BITBOX=bitbox
 include bitbox/kernel/bitbox.mk
 
 src/main.c: src/font.c src/levels.h src/characters.h src/switch_player.c src/switch_animation.c
